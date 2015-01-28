@@ -1,0 +1,13 @@
+apply plugin: 'scala'
+
+group = 'org.openrepose'
+version = '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile group: 'org.scala-lang', name: 'scala-library', version: '2.10.4'
+    testCompile group: 'org.scalatest', name: 'scalatest_2.10', version: '2.2.0'
+}
