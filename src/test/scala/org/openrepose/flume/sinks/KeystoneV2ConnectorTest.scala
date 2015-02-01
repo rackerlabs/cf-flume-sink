@@ -2,6 +2,8 @@ package org.openrepose.flume.sinks
 
 import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 
+import org.apache.http.HttpStatus
+import org.apache.http.entity.ContentType
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.eclipse.jetty.server.{Request, Server, ServerConnector}
 import org.scalatest.{BeforeAndAfterAllConfigMap, ConfigMap, FunSpec, Matchers}
@@ -25,8 +27,8 @@ class KeystoneV2ConnectorTest extends FunSpec with BeforeAndAfterAllConfigMap wi
     it("should send a valid payload and receive a valid token for the user provided") {
       val token = keystoneV2Connector.generateToken("usr", "pwd")
 
-      token shouldBe a [Success[_]]
-      token.get should equal ("tkn-id")
+      token shouldBe a[Success[_]]
+      token.get should equal("tkn-id")
     }
   }
 
@@ -39,9 +41,10 @@ class KeystoneV2ConnectorTest extends FunSpec with BeforeAndAfterAllConfigMap wi
                         baseRequest: Request,
                         request: HttpServletRequest,
                         response: HttpServletResponse): Unit = {
-      response.getOutputStream.print("{\"access\":{\"token\":{\"id\":\"tkn-id\"}}}")
-      response.getOutputStream.flush()
-      response.getOutputStream.close()
+      response.setContentType(ContentType.APPLICATION_JSON.getMimeType)
+      response.setStatus(HttpStatus.SC_OK)
+      baseRequest.setHandled(true)
+      response.getWriter.print("{\"access\":{\"token\":{\"id\":\"tkn-id\"}}}")
     }
   }
 
