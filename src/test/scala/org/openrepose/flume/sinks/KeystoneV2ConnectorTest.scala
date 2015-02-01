@@ -4,11 +4,11 @@ import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.eclipse.jetty.server.{Request, Server, ServerConnector}
-import org.scalatest.{BeforeAndAfterAllConfigMap, ConfigMap, FunSpec}
+import org.scalatest.{BeforeAndAfterAllConfigMap, ConfigMap, FunSpec, Matchers}
 
 import scala.util.Success
 
-class KeystoneV2ConnectorTest extends FunSpec with BeforeAndAfterAllConfigMap {
+class KeystoneV2ConnectorTest extends FunSpec with BeforeAndAfterAllConfigMap with Matchers {
   val testServer = new Server(0)
   testServer.setHandler(new KeystoneV2Handler())
 
@@ -25,8 +25,8 @@ class KeystoneV2ConnectorTest extends FunSpec with BeforeAndAfterAllConfigMap {
     it("should send a valid payload and receive a valid token for the user provided") {
       val token = keystoneV2Connector.generateToken("usr", "pwd")
 
-      assert(token.isInstanceOf[Success[_]])
-      assert("tkn-id".equals(token.get))
+      token shouldBe a [Success[_]]
+      token.get should equal ("tkn-id")
     }
   }
 
