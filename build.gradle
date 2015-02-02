@@ -9,11 +9,11 @@ repositories {
 }
 
 dependencies {
-    compile 'org.scala-lang:scala-library:2.10.4'
-    compile 'org.json4s:json4s-jackson_2.10:3.2.11'
+    compile 'org.scala-lang:scala-library:2.11.5'
+    compile 'org.json4s:json4s-jackson_2.11:3.2.11'
     compile 'org.eclipse.jetty:jetty-server:9.2.7.v20150116'
     compile 'org.apache.flume:flume-ng-core:1.5.2'
     compile 'org.apache.httpcomponents:httpclient:4.3.6'
-    testCompile 'org.scalatest:scalatest_2.10:2.2.0'
+    testCompile 'org.scalatest:scalatest_2.11:2.2.4'
     testCompile 'junit:junit:4.12' // todo: get rid of this when Gradle supports ScalaTest
 }
