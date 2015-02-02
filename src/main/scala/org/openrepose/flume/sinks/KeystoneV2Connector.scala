@@ -22,7 +22,7 @@ object KeystoneV2Connector {
 
   // note: Reads/writes to this static field are not atomic. As a result, multiple requests may be made to the Identity
   //       service when this field has expired. An AtomicReference may be used to enforce stricter threading policies.
-  private var cachedToken: Option[Token] = None
+  private var cachedToken: Option[String] = None
 }
 
 class KeystoneV2Connector(identityHost: String) {
@@ -31,7 +31,7 @@ class KeystoneV2Connector(identityHost: String) {
 
   def getToken(username: String, password: String): Try[String] = {
     cachedToken match {
-      case Some(Token(id, expiration)) if expiration.after(new Date()) =>
+      case Some(id) =>
         Success(id)
       case _ =>
         Try(requestIdentityToken(username, password))
@@ -62,7 +62,7 @@ class KeystoneV2Connector(identityHost: String) {
 
           if (ContentType.APPLICATION_JSON.getMimeType.equalsIgnoreCase(responseEntity.getContentType.getValue)) {
             cachedToken = Some(parseTokenFromJson(responseEntity.getContent, responseEntity.getContentLength))
-            cachedToken.get.id
+            cachedToken.get
           } else {
             throw new Exception("Response from the identity service was not in JSON format as expected")
           }
@@ -75,17 +75,14 @@ class KeystoneV2Connector(identityHost: String) {
     }
   }
 
-  private def parseTokenFromJson(tokenStream: InputStream, contentLength: Long): Token = {
+  private def parseTokenFromJson(tokenStream: InputStream, contentLength: Long): String = {
     implicit lazy val jsonFormats = org.json4s.DefaultFormats
 
     val contentBuffer = new Array[Byte](contentLength.toInt) // note: unsafe conversion for large values of contentLength
     new DataInputStream(tokenStream).readFully(contentBuffer)
     val contentString = new String(contentBuffer)
 
-    val tokenId = (parse(contentString) \ "access" \ "token" \ "id").extract[String]
-    val expirationTime = (parse(contentString) \ "access" \ "token" \ "expires").extract[Date]
-
-    Token(tokenId, expirationTime)
+    (parse(contentString) \ "access" \ "token" \ "id").extract[String]
   }
 }
 
