@@ -5,6 +5,7 @@ import org.apache.http.entity.{ContentType, StringEntity}
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.util.EntityUtils
 import org.apache.http.{HttpHeaders, HttpStatus}
+import org.json4s.JsonDSL._
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 
@@ -25,15 +26,11 @@ class KeystoneV2Connector(identityHost: String) {
   def generateToken(username: String, password: String): Try[String] = {
     val httpClient = HttpClients.createDefault()
     val httpPost = new HttpPost(s"$identityHost$TOKENS_ENDPOINT")
-    val requestBody =
-      s"""{
-            "auth": {
-              "passwordCredentials": {
-                "username": "$username",
-                "password": "$password"
-              }
-            }
-          }"""
+    val requestBody = compact(render(
+      "auth" ->
+        ("passwordCredentials" ->
+          ("username" -> username) ~
+          ("password" -> password))))
     httpPost.addHeader(HttpHeaders.ACCEPT, ContentType.APPLICATION_JSON.getMimeType)
     httpPost.setEntity(new StringEntity(requestBody, ContentType.APPLICATION_JSON))
 
