@@ -15,4 +15,5 @@ dependencies {
     compile 'org.apache.flume:flume-ng-core:1.5.2'
     compile 'org.apache.httpcomponents:httpclient:4.3.6'
     testCompile 'org.scalatest:scalatest_2.10:2.2.0'
+    testCompile 'junit:junit:4.12' // todo: get rid of this when Gradle supports ScalaTest
 }

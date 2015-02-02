@@ -6,10 +6,13 @@ import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.eclipse.jetty.server.{Request, Server, ServerConnector}
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterAllConfigMap, ConfigMap, FunSpec, Matchers}
 
 import scala.util.Success
 
+@RunWith(classOf[JUnitRunner])
 class KeystoneV2ConnectorTest extends FunSpec with BeforeAndAfterAllConfigMap with Matchers {
   val testServer = new Server(0)
   testServer.setHandler(new KeystoneV2Handler())
