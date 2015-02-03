@@ -11,55 +11,64 @@ import org.eclipse.jetty.server.handler.AbstractHandler
 import org.eclipse.jetty.server.{Request, Server, ServerConnector}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfterAllConfigMap, ConfigMap, FunSpec, Matchers}
+import org.scalatest._
 
 import scala.util.{Failure, Success}
 
 @RunWith(classOf[JUnitRunner])
-class KeystoneV2ConnectorTest extends FunSpec with BeforeAndAfterAllConfigMap with Matchers {
+class KeystoneV2ConnectorTest extends FunSpec with BeforeAndAfterAllConfigMap with BeforeAndAfterEach with Matchers {
   val testServer = new Server(0)
-  testServer.setHandler(new KeystoneV2Handler())
+  val keystoneHandler = new KeystoneV2Handler
+  testServer.setHandler(keystoneHandler)
 
   var localPort = -1
-  var keystoneV2Connector: KeystoneV2Connector = _
 
   override def beforeAll(configMap: ConfigMap) {
     testServer.start()
     localPort = testServer.getConnectors()(0).asInstanceOf[ServerConnector].getLocalPort
-    keystoneV2Connector = new KeystoneV2Connector(s"http://localhost:$localPort")
   }
 
   describe("generateToken") {
     it("should send an invalid payload and handle a 4xx response") {
-      keystoneV2Connector.invalidateCachedToken()
-      val token = keystoneV2Connector.getToken("failtest", "")
+      val keystoneV2Connector = new KeystoneV2Connector(s"http://localhost:$localPort", "failtest", "", Map())
+      val token = keystoneV2Connector.getToken()
 
       token shouldBe a[Failure[_]]
     }
     it("should send a valid payload and receive a valid token for the user provided") {
-      keystoneV2Connector.invalidateCachedToken()
-      val token = keystoneV2Connector.getToken("usr", "pwd")
+      val keystoneV2Connector = new KeystoneV2Connector(s"http://localhost:$localPort", "usr", "pwd", Map())
+      val token = keystoneV2Connector.getToken()
 
       token shouldBe a[Success[_]]
       token.get should equal("tkn-id")
     }
     it("should cache a token until invalidated") {
-      val goodToken = keystoneV2Connector.getToken("usr", "pwd")
+      val keystoneV2Connector = new KeystoneV2Connector(s"http://localhost:$localPort", "usr", "pwd", Map())
+      val goodToken = keystoneV2Connector.getToken()
 
       goodToken shouldBe a[Success[_]]
       goodToken.get should equal("tkn-id")
+      keystoneHandler.numberOfInteractions should equal(1)
 
-      val badToken = keystoneV2Connector.getToken("failtest", "")
+      val sameToken = keystoneV2Connector.getToken()
 
-      badToken shouldBe a[Success[_]]
-      badToken.get should equal("tkn-id")
+      sameToken shouldBe a[Success[_]]
+      sameToken.get should equal("tkn-id")
+      keystoneHandler.numberOfInteractions should equal(1)
 
-      keystoneV2Connector.invalidateCachedToken()
+      KeystoneV2Connector.invalidateCachedToken()
 
-      val worstToken = keystoneV2Connector.getToken("failtest", "")
+      val newToken = keystoneV2Connector.getToken()
 
-      worstToken shouldBe a[Failure[_]]
+      newToken shouldBe a[Success[_]]
+      newToken.get should equal("tkn-id")
+      keystoneHandler.numberOfInteractions should equal(2)
     }
+  }
+
+  override protected def afterEach(): Unit = {
+    keystoneHandler.resetInteractions()
+    KeystoneV2Connector.invalidateCachedToken()
   }
 
   override def afterAll(configMap: ConfigMap) {
@@ -67,10 +76,17 @@ class KeystoneV2ConnectorTest extends FunSpec with BeforeAndAfterAllConfigMap wi
   }
 
   class KeystoneV2Handler extends AbstractHandler {
+    var numberOfInteractions: Int = 0
+
+    def resetInteractions() = {
+      numberOfInteractions = 0
+    }
+
     override def handle(target: String,
                         baseRequest: Request,
                         request: HttpServletRequest,
                         response: HttpServletResponse): Unit = {
+      numberOfInteractions = numberOfInteractions + 1
       val requestBody = readBody(request.getInputStream, request.getContentLength.toLong)
       if (requestBody.contains("failtest")) {
         response.sendError(400)

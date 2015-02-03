@@ -4,12 +4,21 @@ import org.apache.flume.Context
 import org.apache.flume.Sink.Status
 import org.apache.flume.conf.Configurable
 import org.apache.flume.sink.AbstractSink
+import scala.collection.JavaConverters._
 
 /**
  * A custom Flume sink for publishing to an endpoint using the AtomPub protocol.
  */
 class AtomPublishingSink extends AbstractSink with Configurable {
-  override def configure(context: Context): Unit = ???
+
+  var keystoneV2Connector: KeystoneV2Connector = _
+
+  override def configure(context: Context): Unit = {
+    keystoneV2Connector = new KeystoneV2Connector(context.getString("identity.endpoint"),
+                                                  context.getString("identity.username"),
+                                                  context.getString("identity.password"),
+                                                  context.getSubProperties("identity.http.properties.").asScala.toMap)
+  }
 
   override def process(): Status = {
     var status: Status = null

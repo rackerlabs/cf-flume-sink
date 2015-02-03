@@ -24,26 +24,26 @@ object KeystoneV2Connector {
   // note: Reads/writes to this static field are not atomic. As a result, multiple requests may be made to the Identity
   //       service when this field has expired. An AtomicReference may be used to enforce stricter threading policies.
   private var cachedToken: Option[String] = None
-}
-
-class KeystoneV2Connector(identityHost: String) {
-
-  import org.openrepose.flume.sinks.KeystoneV2Connector._
-
-  def getToken(username: String, password: String): Try[String] = {
-    cachedToken match {
-      case Some(id) =>
-        Success(id)
-      case _ =>
-        Try(requestIdentityToken(username, password))
-    }
-  }
 
   def invalidateCachedToken(): Unit = {
     cachedToken = None
   }
+}
 
-  private def requestIdentityToken(username: String, password: String): String = {
+class KeystoneV2Connector(identityHost: String, username: String, password: String, httpProperties: Map[String, String]) {
+
+  import org.openrepose.flume.sinks.KeystoneV2Connector._
+
+  def getToken(): Try[String] = {
+    cachedToken match {
+      case Some(id) =>
+        Success(id)
+      case _ =>
+        Try(requestIdentityToken())
+    }
+  }
+
+  private def requestIdentityToken(): String = {
     val httpClient = HttpClients.createDefault()
     val httpPost = new HttpPost(s"$identityHost$TOKENS_ENDPOINT")
     val requestBody = compact(render(
