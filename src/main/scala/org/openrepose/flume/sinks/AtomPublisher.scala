@@ -3,38 +3,22 @@ package org.openrepose.flume.sinks
 import java.util.Date
 
 import org.apache.abdera.Abdera
-import org.apache.abdera.model.Entry
-import org.apache.abdera.protocol.client.{AbderaClient, ClientResponse}
 
-import scala.util.Try
+object AtomPublisher {
 
-class AtomPublisher {
-  private final val abdera = new Abdera()
-  private final val abderaClient = new AbderaClient(abdera)
+  private val abdera = new Abdera()
 
-  def pack(content: String): Entry = {
-    val feed = abdera.newFeed()
+  def pack(content: String): String = {
+    val now = new Date()
 
-    feed.setId("tag:example.org,2007:/foo")
-    feed.setTitle("Test Feed")
-    feed.setSubtitle("Feed subtitle")
-    feed.setUpdated(new Date())
-    feed.addAuthor("James Snell")
-    feed.addLink("http://example.com")
-    feed.addLink("http://example.com/foo", "self")
+    val entry = abdera.newEntry
+    entry.setId("tag:example.org,2007:/foo/entries/1") // todo: No idea what this ID should be...
+    entry.setTitle("User Access Event")
+    entry.addAuthor("Repose")
+    entry.setUpdated(now)
+    entry.setPublished(now)
+    entry.setContent(content) // todo: set the content type if text is not desired (needs to be configurable based on template?)
 
-    val entry = feed.addEntry()
-    entry.setId("tag:example.org,2007:/foo/entries/1")
-    entry.setTitle("Entry title")
-    entry.setSummaryAsHtml("<p>This is the entry title</p>")
-    entry.setUpdated(new Date())
-    entry.setPublished(new Date())
-    entry.addLink("http://example.com/foo/entries/1")
-
-    entry
-  }
-
-  def post(entry: Entry): Try[ClientResponse] = {
-    ???
+    entry.toString
   }
 }
