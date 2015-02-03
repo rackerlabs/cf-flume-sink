@@ -30,6 +30,8 @@ object KeystoneV2Connector {
   }
 }
 
+// note (potential bug): The cachedToken is shared between all instances of this class. If multiple instances are
+//                       instantiated with different credentials, the cachedToken may never prove useful.
 class KeystoneV2Connector(identityHost: String, username: String, password: String, httpProperties: Map[String, String]) {
 
   import org.openrepose.flume.sinks.KeystoneV2Connector._
