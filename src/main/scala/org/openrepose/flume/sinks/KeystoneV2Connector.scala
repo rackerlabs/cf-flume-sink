@@ -87,5 +87,3 @@ class KeystoneV2Connector(identityHost: String, username: String, password: Stri
     (parse(contentString) \ "access" \ "token" \ "id").extract[String]
   }
 }
-
-case class Token(id: String, expiration: Date)
