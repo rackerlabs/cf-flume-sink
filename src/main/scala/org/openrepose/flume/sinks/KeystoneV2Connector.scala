@@ -1,6 +1,6 @@
 package org.openrepose.flume.sinks
 
-import java.io.{DataInputStream, InputStream}
+import java.io.InputStream
 import java.util.Date
 
 import org.apache.http.client.methods.HttpPost
@@ -12,6 +12,7 @@ import org.json4s.JsonDSL._
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 
+import scala.io.{Codec, Source}
 import scala.util.{Success, Try}
 
 /**
@@ -61,7 +62,7 @@ class KeystoneV2Connector(identityHost: String) {
           val responseEntity = httpResponse.getEntity
 
           if (ContentType.APPLICATION_JSON.getMimeType.equalsIgnoreCase(responseEntity.getContentType.getValue)) {
-            cachedToken = Some(parseTokenFromJson(responseEntity.getContent, responseEntity.getContentLength))
+            cachedToken = Some(parseTokenFromJson(responseEntity.getContent))
             cachedToken.get
           } else {
             throw new Exception("Response from the identity service was not in JSON format as expected")
@@ -75,12 +76,10 @@ class KeystoneV2Connector(identityHost: String) {
     }
   }
 
-  private def parseTokenFromJson(tokenStream: InputStream, contentLength: Long): String = {
+  private def parseTokenFromJson(tokenStream: InputStream): String = {
     implicit lazy val jsonFormats = org.json4s.DefaultFormats
 
-    val contentBuffer = new Array[Byte](contentLength.toInt) // note: unsafe conversion for large values of contentLength
-    new DataInputStream(tokenStream).readFully(contentBuffer)
-    val contentString = new String(contentBuffer)
+    val contentString = Source.fromInputStream(tokenStream)(Codec.UTF8).mkString
 
     (parse(contentString) \ "access" \ "token" \ "id").extract[String]
   }
