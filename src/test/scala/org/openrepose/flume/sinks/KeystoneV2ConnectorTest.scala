@@ -86,7 +86,7 @@ class KeystoneV2ConnectorTest extends FunSpec with BeforeAndAfterAllConfigMap wi
                         baseRequest: Request,
                         request: HttpServletRequest,
                         response: HttpServletResponse): Unit = {
-      numberOfInteractions = numberOfInteractions + 1
+      numberOfInteractions += 1
       val requestBody = readBody(request.getInputStream, request.getContentLength.toLong)
       if (requestBody.contains("failtest")) {
         response.sendError(400)
