@@ -36,7 +36,9 @@ class KeystoneV2Connector(identityHost: String, username: String, password: Stri
 
   import org.openrepose.flume.sinks.KeystoneV2Connector._
 
-  def getToken(): Try[String] = {
+  private val httpClient = HttpClients.createDefault()
+
+  def getToken: Try[String] = {
     cachedToken match {
       case Some(id) =>
         Success(id)
@@ -46,7 +48,6 @@ class KeystoneV2Connector(identityHost: String, username: String, password: Stri
   }
 
   private def requestIdentityToken(): String = {
-    val httpClient = HttpClients.createDefault()
     val httpPost = new HttpPost(s"$identityHost$TOKENS_ENDPOINT")
     val requestBody = compact(render(
       "auth" ->
