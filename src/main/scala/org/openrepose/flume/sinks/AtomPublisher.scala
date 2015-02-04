@@ -1,6 +1,6 @@
 package org.openrepose.flume.sinks
 
-import java.util.Date
+import java.util.{Date, UUID}
 
 import org.apache.abdera.Abdera
 
@@ -12,12 +12,11 @@ object AtomPublisher {
     val now = new Date()
 
     val entry = abdera.newEntry
-    entry.setId("tag:example.org,2007:/foo/entries/1") // todo: No idea what this ID should be...
+    entry.setId(UUID.randomUUID().toString)
     entry.setTitle("User Access Event")
     entry.addAuthor("Repose")
     entry.setUpdated(now)
-    entry.setPublished(now)
-    entry.setContent(content) // todo: set the content type if text is not desired (needs to be configurable based on template?)
+    entry.setContent(content)
 
     entry.toString
   }
