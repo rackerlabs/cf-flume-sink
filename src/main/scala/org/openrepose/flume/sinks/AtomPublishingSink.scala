@@ -4,6 +4,7 @@ import org.apache.flume.Context
 import org.apache.flume.Sink.Status
 import org.apache.flume.conf.Configurable
 import org.apache.flume.sink.AbstractSink
+
 import scala.collection.JavaConverters._
 
 /**

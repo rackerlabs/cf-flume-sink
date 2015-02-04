@@ -1,7 +1,11 @@
 package org.openrepose.flume.sinks
 
-import org.scalatest.FunSuite
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
+import org.scalatest.{FunSpec, Matchers}
 
-class AtomPublishingSinkTest extends FunSuite {
+@RunWith(classOf[JUnitRunner])
+class AtomPublishingSinkTest extends FunSpec with Matchers {
 
+  describe("process")(pending)
 }
