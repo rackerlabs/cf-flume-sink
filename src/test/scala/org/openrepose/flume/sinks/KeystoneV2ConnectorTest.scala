@@ -53,7 +53,7 @@ class KeystoneV2ConnectorTest extends FunSpec with BeforeAndAfterAll with Before
     }
   }
 
-  override protected def afterEach() {
+  override def afterEach() {
     keystoneHandler.resetInteractions()
     KeystoneV2Connector.invalidateCachedToken()
   }

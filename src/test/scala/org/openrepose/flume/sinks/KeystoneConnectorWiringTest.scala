@@ -34,5 +34,6 @@ class KeystoneConnectorWiringTest extends FunSpec with BeforeAndAfterAll with Ma
 
   override def afterAll() {
     stopServer()
+    KeystoneV2Connector.invalidateCachedToken()
   }
 }
