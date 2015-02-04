@@ -4,11 +4,11 @@ import java.util.{Date, UUID}
 
 import org.apache.abdera.Abdera
 
-object AtomPublisher {
+object AtomFormatter {
 
   private val abdera = new Abdera()
 
-  def pack(content: String): String = {
+  def wrap(content: String): String = {
     val now = new Date()
 
     val entry = abdera.newEntry
