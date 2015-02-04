@@ -1,7 +1,6 @@
 package org.openrepose.flume.sinks
 
 import java.io.InputStream
-import java.util.Date
 
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.{ContentType, StringEntity}
@@ -20,14 +19,6 @@ import scala.util.{Success, Try}
  */
 object KeystoneV2Connector {
   private final val TOKENS_ENDPOINT = "/v2.0/tokens"
-
-  // note: Reads/writes to this static field are not atomic. As a result, multiple requests may be made to the Identity
-  //       service when this field has expired. An AtomicReference may be used to enforce stricter threading policies.
-  private var cachedToken: Option[String] = None
-
-  def invalidateCachedToken(): Unit = {
-    cachedToken = None
-  }
 }
 
 // note (potential bug): The cachedToken is shared between all instances of this class. If multiple instances are
@@ -37,6 +28,12 @@ class KeystoneV2Connector(identityHost: String, username: String, password: Stri
   import org.openrepose.flume.sinks.KeystoneV2Connector._
 
   private val httpClient = HttpClients.createDefault()
+
+  private var cachedToken: Option[String] = None
+
+  def invalidateCachedToken(): Unit = {
+    cachedToken = None
+  }
 
   def getToken: Try[String] = {
     cachedToken match {

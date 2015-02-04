@@ -43,7 +43,7 @@ class KeystoneV2ConnectorTest extends FunSpec with BeforeAndAfterAll with Before
       sameToken.get should equal("tkn-id")
       keystoneHandler.numberOfInteractions should equal(1)
 
-      KeystoneV2Connector.invalidateCachedToken()
+      keystoneV2Connector.invalidateCachedToken()
 
       val newToken = keystoneV2Connector.getToken
 
@@ -55,7 +55,6 @@ class KeystoneV2ConnectorTest extends FunSpec with BeforeAndAfterAll with Before
 
   override def afterEach() {
     keystoneHandler.resetInteractions()
-    KeystoneV2Connector.invalidateCachedToken()
   }
 
   override def afterAll() {
