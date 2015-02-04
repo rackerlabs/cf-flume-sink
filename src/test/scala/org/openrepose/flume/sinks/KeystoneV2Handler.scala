@@ -5,23 +5,24 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 
-import org.apache.http.HttpStatus
-import org.apache.http.entity.ContentType
+import org.eclipse.jetty.http.MimeTypes
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.handler.AbstractHandler
 
 class KeystoneV2Handler extends AbstractHandler {
-  var numberOfInteractions: Int = 0
+  private var _numberOfInteractions = 0
+
+  def numberOfInteractions = _numberOfInteractions
 
   def resetInteractions() = {
-    numberOfInteractions = 0
+    _numberOfInteractions = 0
   }
 
   override def handle(target: String,
                       baseRequest: Request,
                       request: HttpServletRequest,
                       response: HttpServletResponse): Unit = {
-    numberOfInteractions += 1
+    _numberOfInteractions += 1
     val requestBody = readBody(request.getInputStream, request.getContentLength.toLong)
     if (requestBody.contains("failtest")) {
       response.sendError(400)
@@ -31,10 +32,10 @@ class KeystoneV2Handler extends AbstractHandler {
         cal.add(Calendar.DATE, 1)
         new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(cal.getTime)
       }
-      response.setContentType(ContentType.APPLICATION_JSON.getMimeType)
-      response.setStatus(HttpStatus.SC_OK)
+      response.setContentType(MimeTypes.Type.APPLICATION_JSON.asString())
+      response.setStatus(HttpServletResponse.SC_OK)
       baseRequest.setHandled(true)
-      response.getWriter.print( s"""{"access":{"token":{"expires":"$expirationDate","id":"tkn-id"}}}""")
+      response.getWriter.print(s"""{"access":{"token":{"expires":"$expirationDate","id":"tkn-id"}}}""")
     }
   }
 
