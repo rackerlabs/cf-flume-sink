@@ -7,25 +7,21 @@ import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 
 import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
+import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.handler.AbstractHandler
-import org.eclipse.jetty.server.{Request, Server, ServerConnector}
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 import org.scalatest._
+import org.scalatest.junit.JUnitRunner
 
 import scala.util.{Failure, Success}
 
 @RunWith(classOf[JUnitRunner])
-class KeystoneV2ConnectorTest extends FunSpec with BeforeAndAfterAllConfigMap with BeforeAndAfterEach with Matchers {
-  val testServer = new Server(0)
+class KeystoneV2ConnectorTest extends FunSpec with BeforeAndAfterAllConfigMap with BeforeAndAfterEach with Matchers with JettyTestServer {
   val keystoneHandler = new KeystoneV2Handler
-  testServer.setHandler(keystoneHandler)
-
-  var localPort = -1
+  setHandler(keystoneHandler)
 
   override def beforeAll(configMap: ConfigMap) {
-    testServer.start()
-    localPort = testServer.getConnectors()(0).asInstanceOf[ServerConnector].getLocalPort
+    startServer()
   }
 
   describe("generateToken") {
@@ -72,7 +68,7 @@ class KeystoneV2ConnectorTest extends FunSpec with BeforeAndAfterAllConfigMap wi
   }
 
   override def afterAll(configMap: ConfigMap) {
-    testServer.stop()
+    stopServer()
   }
 
   class KeystoneV2Handler extends AbstractHandler {
