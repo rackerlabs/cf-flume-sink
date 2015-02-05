@@ -12,17 +12,13 @@ import org.scalatest._
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class CloudFeedPublisherTest extends FunSpec with BeforeAndAfterAllConfigMap with BeforeAndAfterEach with Matchers {
-  val testServer = new Server(0)
+class CloudFeedPublisherTest extends FunSpec with BeforeAndAfterAllConfigMap with BeforeAndAfterEach with Matchers with JettyTestServer{
   val feedsHandler = new FeedsHandler
-  testServer.setHandler(feedsHandler)
+  setHandler(feedsHandler)
   var publisher: CloudFeedPublisher = _
 
-  var localPort = -1
-
   override def beforeAll(configMap: ConfigMap) {
-    testServer.start()
-    localPort = testServer.getConnectors()(0).asInstanceOf[ServerConnector].getLocalPort
+    startServer()
   }
 
   override protected def beforeEach() = {
@@ -61,7 +57,7 @@ class CloudFeedPublisherTest extends FunSpec with BeforeAndAfterAllConfigMap wit
   }
 
   override def afterAll(configMap: ConfigMap) {
-    testServer.stop()
+    stopServer()
   }
 
   class FeedsHandler extends AbstractHandler {
