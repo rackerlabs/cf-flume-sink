@@ -8,15 +8,12 @@ import org.apache.http.impl.client.HttpClients
 import org.apache.http.util.EntityUtils
 
 /**
- * Created with IntelliJ IDEA.
- * User: adrian
- * Date: 2/4/15
- * Time: 12:23 PM
+ * A simple class to publish events to Cloud Feeds.
  */
 class CloudFeedPublisher(feedsEndpoint: String, httpProperties: Map[String, String]) extends LazyLogging {
   private val httpClient = HttpClients.createDefault()
 
-  def publish(atomMessage: String, identityToken: String)  = {
+  def publish(atomMessage: String, identityToken: String): Unit = {
     val httpPost = new HttpPost(feedsEndpoint)
     httpPost.addHeader("X-AUTH-TOKEN", identityToken)
     httpPost.setEntity(new StringEntity(atomMessage, ContentType.APPLICATION_ATOM_XML))
@@ -35,7 +32,6 @@ class CloudFeedPublisher(feedsEndpoint: String, httpProperties: Map[String, Stri
       EntityUtils.consume(httpResponse.getEntity)
       httpResponse.close()
     }
-
   }
 }
 
