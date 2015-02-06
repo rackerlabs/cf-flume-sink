@@ -41,6 +41,30 @@ class AtomPublishingSinkTest extends FunSpec with Matchers with MockitoSugar {
       verify(mockTransaction, times(1)).commit()
       verify(mockTransaction, times(1)).close()
     }
-    it("should rollback an unsuccessful transaction")(pending)
+    it("should rollback an unsuccessful transaction") {
+      val mockChannel = mock[Channel]
+      val mockTransaction = mock[Transaction]
+      val mockEvent = mock[Event]
+      val mockKeystoneConnector = mock[KeystoneV2Connector]
+      val mockFeedPublisher = mock[CloudFeedPublisher]
+      when(mockKeystoneConnector.getToken).thenReturn(Try("tkn"))
+      when(mockFeedPublisher.publish(mockitoEq("tst bdy"), mockitoEq("tkn"))).thenThrow(new RuntimeException())
+      when(mockChannel.getTransaction).thenReturn(mockTransaction)
+      when(mockChannel.take).thenReturn(mockEvent)
+      when(mockEvent.getBody).thenReturn("tst bdy".getBytes(StandardCharsets.UTF_8))
+
+      val sink = new AtomPublishingSink()
+      sink.setChannel(mockChannel)
+      sink.keystoneV2Connector = mockKeystoneConnector
+      sink.feedPublisher = mockFeedPublisher
+
+      val status = sink.process()
+
+      status should be theSameInstanceAs Status.BACKOFF
+      verify(mockFeedPublisher, times(1)).publish(mockitoEq("tst bdy"), mockitoEq("tkn"))
+      verify(mockTransaction, times(1)).begin()
+      verify(mockTransaction, times(1)).rollback()
+      verify(mockTransaction, times(1)).close()
+    }
   }
 }
