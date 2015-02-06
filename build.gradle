@@ -1,8 +1,27 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven { url 'http://repository.jboss.org/nexus/content/groups/public/' }
+        maven { url 'https://repo.spring.io/plugins-release' }
+    }
+    dependencies {
+        classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.1'
+        classpath 'org.springframework.build.gradle:propdeps-plugin:0.0.7'
+    }
+}
+
 apply plugin: 'scala'
 apply plugin: 'idea'
+apply plugin: 'maven'
+apply plugin: 'propdeps'
+apply plugin: 'propdeps-maven'
+apply plugin: 'propdeps-idea'
+apply plugin: 'maven-publish'
+apply plugin: 'maven-publish-auth'
 
 group = 'org.openrepose'
-version = '1.0'
+version = '1.0.0'
 
 repositories {
     mavenCentral()
@@ -18,4 +37,22 @@ dependencies {
     compile 'com.typesafe.scala-logging:scala-logging_2.11:3.1.0'
     testCompile 'org.scalatest:scalatest_2.11:2.2.4'
     testCompile 'junit:junit:4.12' // todo: get rid of this when Gradle supports ScalaTest
+}
+
+tasks.withType(ScalaCompile) {
+    scalaCompileOptions.useAnt = false
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            artifact jar
+        }
+    }
+    repositories {
+        maven {
+            name "releases.maven.research.rackspace.com"
+            url "https://maven.research.rackspacecloud.com/content/repositories/releases"
+        }
+    }
 }
