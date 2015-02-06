@@ -11,8 +11,6 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{FunSpec, Matchers}
 
-import scala.util.Try
-
 @RunWith(classOf[JUnitRunner])
 class AtomPublishingSinkTest extends FunSpec with Matchers with MockitoSugar {
 
@@ -23,7 +21,7 @@ class AtomPublishingSinkTest extends FunSpec with Matchers with MockitoSugar {
       val mockEvent = mock[Event]
       val mockKeystoneConnector = mock[KeystoneV2Connector]
       val mockFeedPublisher = mock[CloudFeedPublisher]
-      when(mockKeystoneConnector.getToken).thenReturn(Try("tkn"))
+      when(mockKeystoneConnector.getToken).thenReturn("tkn")
       when(mockChannel.getTransaction).thenReturn(mockTransaction)
       when(mockChannel.take).thenReturn(mockEvent)
       when(mockEvent.getBody).thenReturn("tst bdy".getBytes(StandardCharsets.UTF_8))
@@ -47,7 +45,7 @@ class AtomPublishingSinkTest extends FunSpec with Matchers with MockitoSugar {
       val mockEvent = mock[Event]
       val mockKeystoneConnector = mock[KeystoneV2Connector]
       val mockFeedPublisher = mock[CloudFeedPublisher]
-      when(mockKeystoneConnector.getToken).thenReturn(Try("tkn"))
+      when(mockKeystoneConnector.getToken).thenReturn("tkn")
       when(mockFeedPublisher.publish(mockitoEq("tst bdy"), mockitoEq("tkn"))).thenThrow(new RuntimeException())
       when(mockChannel.getTransaction).thenReturn(mockTransaction)
       when(mockChannel.take).thenReturn(mockEvent)

@@ -6,7 +6,6 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterAll, FunSpec, Matchers}
 
 import scala.collection.JavaConverters._
-import scala.util.Success
 
 @RunWith(classOf[JUnitRunner])
 class KeystoneConnectorWiringTest extends FunSpec with BeforeAndAfterAll with Matchers with JettyTestServer {
@@ -27,8 +26,7 @@ class KeystoneConnectorWiringTest extends FunSpec with BeforeAndAfterAll with Ma
 
       val token = sink.keystoneV2Connector.getToken
 
-      token shouldBe a[Success[_]]
-      token.get should equal("tkn-id")
+      token should equal("tkn-id")
     }
   }
 

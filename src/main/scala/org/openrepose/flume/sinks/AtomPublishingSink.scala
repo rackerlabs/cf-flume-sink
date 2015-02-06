@@ -7,7 +7,6 @@ import org.apache.flume.conf.Configurable
 import org.apache.flume.sink.AbstractSink
 
 import scala.collection.JavaConverters._
-import scala.util.{Failure, Success}
 
 /**
  * A custom Flume sink for publishing to an endpoint using the AtomPub protocol.
@@ -29,16 +28,12 @@ class AtomPublishingSink extends AbstractSink with Configurable with LazyLogging
   override def process(): Status = {
     val channel = getChannel
     val txn = channel.getTransaction
+
     txn.begin()
     try {
       val event = channel.take()
 
-      val userToken = keystoneV2Connector.getToken match {
-        case Success(token) => token
-        case Failure(e) => throw e
-      }
-
-      feedPublisher.publish(new String(event.getBody), userToken)
+      feedPublisher.publish(new String(event.getBody), keystoneV2Connector.getToken)
 
       txn.commit()
       Status.READY
