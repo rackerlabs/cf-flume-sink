@@ -1,27 +1,36 @@
 package org.openrepose.flume.sinks
 
-import com.typesafe.scalalogging.LazyLogging
-import org.apache.http.client.HttpClient
-import org.apache.http.impl.client.DefaultHttpClient
-import org.apache.http.params.BasicHttpParams
+import java.net.InetAddress
 
-import scala.util.Try
+import com.typesafe.scalalogging.LazyLogging
+import org.apache.http.HttpHost
+import org.apache.http.client.config.RequestConfig
+import org.apache.http.impl.client.{CloseableHttpClient, HttpClients}
 
 object HttpClientConfigurator extends LazyLogging {
 
-  def buildClient(httpProperties: Map[String, String]): HttpClient = {
-    val httpClientParams = new BasicHttpParams()
+  def buildClient(httpProperties: Map[String, String]): CloseableHttpClient = {
+    val requestConfigBuilder = RequestConfig.custom()
 
-    // todo: what happens when a long is desired, but the value fits into an int?
-    httpProperties foreach { case (key, value) =>
-      Try(value.toInt).map(httpClientParams.setIntParameter(key, _)).orElse(
-      Try(value.toLong).map(httpClientParams.setLongParameter(key, _)).orElse(
-      Try(value.toDouble).map(httpClientParams.setDoubleParameter(key, _)).orElse(
-      Try(value.toBoolean).map(httpClientParams.setBooleanParameter(key, _)).orElse(
-      Try(httpClientParams.setParameter(key, value)).recover {
-        case _ => logger.error(s"""Could not set the HttpClient "$key" property""")}))))
+    httpProperties foreach {
+      case ("authentication.enabled", value) => requestConfigBuilder.setAuthenticationEnabled(value.toBoolean)
+      case ("circular.redirects.allowed", value) => requestConfigBuilder.setCircularRedirectsAllowed(value.toBoolean)
+      case ("connection.request.timeout", value) => requestConfigBuilder.setConnectionRequestTimeout(value.toInt)
+      case ("connect.timeout", value) => requestConfigBuilder.setConnectTimeout(value.toInt)
+      case ("cookie.spec", value) => requestConfigBuilder.setCookieSpec(value)
+      case ("expect.continue.enabled", value) => requestConfigBuilder.setExpectContinueEnabled(value.toBoolean)
+      case ("local.address", value) => requestConfigBuilder.setLocalAddress(InetAddress.getByName(value))
+      case ("max.redirects", value) => requestConfigBuilder.setMaxRedirects(value.toInt)
+      case ("proxy", value) => requestConfigBuilder.setProxy(new HttpHost(value))
+      // case ("proxy.preferred.auth.schemes", value) => requestConfigBuilder.setProxyPreferredAuthSchemes()
+      case ("redirects.enabled", value) => requestConfigBuilder.setRedirectsEnabled(value.toBoolean)
+      case ("relative.redirects.allowed", value) => requestConfigBuilder.setRelativeRedirectsAllowed(value.toBoolean)
+      case ("socket.timeout", value) => requestConfigBuilder.setSocketTimeout(value.toInt)
+      case ("stale.connection.check.enabled", value) => requestConfigBuilder.setStaleConnectionCheckEnabled(value.toBoolean)
+      // case ("target.preferred.auth.schemas", value) => requestConfigBuilder.setTargetPreferredAuthSchemes()
+      case (key, _) => logger.error( s"""Could not set the HttpClient "$key" property""")
     }
 
-    new DefaultHttpClient(httpClientParams)
+    HttpClients.custom().setDefaultRequestConfig(requestConfigBuilder.build()).build()
   }
 }

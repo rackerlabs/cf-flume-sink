@@ -74,6 +74,7 @@ class KeystoneV2Connector(identityHost: String, username: String, password: Stri
       }
     } finally {
       EntityUtils.consume(httpResponse.getEntity)
+      httpResponse.close()
     }
   }
 

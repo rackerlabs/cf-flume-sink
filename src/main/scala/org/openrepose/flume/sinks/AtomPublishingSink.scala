@@ -20,9 +20,9 @@ class AtomPublishingSink extends AbstractSink with Configurable with LazyLogging
     keystoneV2Connector = new KeystoneV2Connector(context.getString("identity.endpoint"),
                                                   context.getString("identity.username"),
                                                   context.getString("identity.password"),
-                                                  context.getSubProperties("identity.properties.").asScala.toMap)
+                                                  context.getSubProperties("identity.properties.http.").asScala.toMap)
     feedPublisher = new CloudFeedPublisher(context.getString("feeds.endpoint"),
-                                           context.getSubProperties("feeds.properties.").asScala.toMap)
+                                           context.getSubProperties("feeds.properties.http.").asScala.toMap)
   }
 
   override def process(): Status = {

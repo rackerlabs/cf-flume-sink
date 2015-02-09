@@ -29,6 +29,7 @@ class CloudFeedPublisher(feedsEndpoint: String, httpProperties: Map[String, Stri
       }
     } finally {
       EntityUtils.consume(httpResponse.getEntity)
+      httpResponse.close()
     }
   }
 }
