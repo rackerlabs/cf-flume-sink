@@ -4,10 +4,12 @@ buildscript {
         mavenCentral()
         maven { url 'http://repository.jboss.org/nexus/content/groups/public/' }
         maven { url 'https://repo.spring.io/plugins-release' }
+        jcenter()
     }
     dependencies {
         classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.1'
         classpath 'org.springframework.build.gradle:propdeps-plugin:0.0.7'
+        classpath 'com.netflix.nebula:gradle-ospackage-plugin:2.2.0'
     }
 }
 
@@ -20,6 +22,7 @@ apply plugin: 'propdeps-maven'
 apply plugin: 'propdeps-idea'
 apply plugin: 'maven-publish'
 apply plugin: 'maven-publish-auth'
+apply plugin: 'os-package'
 
 group = 'org.openrepose'
 version = '1.0.0'
@@ -65,4 +68,14 @@ publishing {
             url "https://maven.research.rackspacecloud.com/content/repositories/releases"
         }
     }
+}
+
+ospackage {
+    into '/opt/flume/'
+
+    from(fatJar.outputs.files) {
+        into 'plugins.d'
+    }
+    user 'flume'
+    permissionGroup 'flume'
 }
