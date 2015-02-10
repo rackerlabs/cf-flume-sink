@@ -78,4 +78,7 @@ ospackage {
     }
     user 'flume'
     permissionGroup 'flume'
+    // todo: License (Apache 2.0)
+    // todo: Description
+    // todo: Set URL to Github
 }
