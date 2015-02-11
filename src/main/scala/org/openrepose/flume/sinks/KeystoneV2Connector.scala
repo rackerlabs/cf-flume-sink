@@ -5,6 +5,7 @@ import java.io.InputStream
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.{ContentType, StringEntity}
+import org.apache.http.impl.client.HttpClients
 import org.apache.http.util.EntityUtils
 import org.apache.http.{HttpHeaders, HttpStatus}
 import org.json4s.JsonDSL._
@@ -27,8 +28,9 @@ class KeystoneV2Connector(identityHost: String, username: String, password: Stri
 
   import org.openrepose.flume.sinks.KeystoneV2Connector._
 
-  // todo: Set http client properties
-  private val httpClient = HttpClientConfigurator.buildClient(httpProperties)
+  private val httpClient = HttpClients.custom()
+    .setDefaultRequestConfig(HttpClientConfigurator.getConfig(httpProperties))
+    .build()
 
   private var cachedToken: Option[String] = None
 
@@ -74,6 +76,7 @@ class KeystoneV2Connector(identityHost: String, username: String, password: Stri
       }
     } finally {
       EntityUtils.consume(httpResponse.getEntity)
+      httpResponse.close()
     }
   }
 
