@@ -78,6 +78,17 @@ publishing {
 }
 
 ospackage {
+    packageDescription '''Installs a custom Flume sink which sends events over HTTP to a Cloud Feeds endpoint using \
+                         |the AtomPub protocol.'''.stripMargin()
+
+    license 'Apache License, Version 2.0'
+    url 'https://github.com/rackerlabs/cf-flume-sink'
+
+    from('LICENSE.txt') {
+        fileType LICENSE
+        into '/usr/share/doc/cf-flume-sink'
+    }
+
     into '/opt/flume/'
 
     from(fatJar.outputs.files) {
@@ -86,8 +97,6 @@ ospackage {
     user 'flume'
     permissionGroup 'flume'
     os 'LINUX'
-    // todo: License (Apache 2.0)
-    // todo: Description
-    // todo: Set URL to Github
+
     // todo: Depends on our Flume packages
 }
