@@ -10,6 +10,7 @@ buildscript {
         classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.1'
         classpath 'org.springframework.build.gradle:propdeps-plugin:0.0.7'
         classpath 'com.netflix.nebula:gradle-ospackage-plugin:2.2.0'
+        classpath 'org.hidetake:gradle-ssh-plugin:1.0.5'
     }
 }
 
@@ -23,6 +24,7 @@ apply plugin: 'propdeps-idea'
 apply plugin: 'maven-publish'
 apply plugin: 'maven-publish-auth'
 apply plugin: 'os-package'
+apply plugin: 'org.hidetake.ssh'
 
 group = 'org.openrepose'
 version = '1.0.0'
@@ -99,4 +101,21 @@ ospackage {
     os 'LINUX'
 
     // todo: Depends on our Flume packages
+}
+
+remotes {
+    packageRepo {
+        host = '50.56.69.25'
+        user = 'repose-dev'
+        identity = file('~/.ssh/id_rsa')
+    }
+}
+
+task deploy << {
+    ssh.run {
+        session(remotes.packageRepo) {
+            put from: buildRpm.outputs.files, into: '/RELEASES'
+            put from: buildDeb.outputs.files, into: '/RELEASES'
+        }
+    }
 }
