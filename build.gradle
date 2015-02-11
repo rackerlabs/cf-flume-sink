@@ -86,6 +86,8 @@ ospackage {
     license 'Apache License, Version 2.0'
     url 'https://github.com/rackerlabs/cf-flume-sink'
 
+    preInstall file('preInstall.sh')
+
     from('LICENSE.txt') {
         fileType LICENSE
         into '/usr/share/doc/cf-flume-sink'
