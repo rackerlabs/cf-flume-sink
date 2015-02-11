@@ -58,8 +58,15 @@ task fatJar(type: Jar) {
 
 publishing {
     publications {
-        maven(MavenPublication) {
+        mavenJar(MavenPublication) {
             artifact jar
+            artifact source: fatJar, classifier: 'all', extension: 'jar'
+        }
+        mavenRpm(MavenPublication) {
+            artifact source: buildRpm, extension: 'rpm'
+        }
+        mavenDeb(MavenPublication) {
+            artifact source: buildDeb, extension: 'deb'
         }
     }
     repositories {
