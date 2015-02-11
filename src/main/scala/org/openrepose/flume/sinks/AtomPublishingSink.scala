@@ -33,7 +33,7 @@ class AtomPublishingSink extends AbstractSink with Configurable with LazyLogging
     try {
       val event = channel.take()
 
-      feedPublisher.publish(new String(event.getBody), keystoneV2Connector.getToken)
+      feedPublisher.publish(AtomFormatter.wrap(new String(event.getBody)), keystoneV2Connector.getToken)
 
       txn.commit()
       Status.READY
