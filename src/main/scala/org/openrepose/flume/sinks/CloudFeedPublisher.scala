@@ -4,13 +4,17 @@ import com.typesafe.scalalogging.LazyLogging
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.{ContentType, StringEntity}
+import org.apache.http.impl.client.HttpClients
 import org.apache.http.util.EntityUtils
 
 /**
  * A simple class to publish events to Cloud Feeds.
  */
 class CloudFeedPublisher(feedsEndpoint: String, httpProperties: Map[String, String]) extends LazyLogging {
-  private val httpClient = HttpClientConfigurator.buildClient(httpProperties)
+
+  private val httpClient = HttpClients.custom()
+    .setDefaultRequestConfig(HttpClientConfigurator.getConfig(httpProperties))
+    .build()
 
   def publish(atomMessage: String, identityToken: String): Unit = {
     val httpPost = new HttpPost(feedsEndpoint)

@@ -5,13 +5,12 @@ import java.net.InetAddress
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.http.HttpHost
 import org.apache.http.client.config.RequestConfig
-import org.apache.http.impl.client.{CloseableHttpClient, HttpClients}
 
 import scala.collection.JavaConverters._
 
 object HttpClientConfigurator extends LazyLogging {
 
-  def buildClient(httpProperties: Map[String, String]): CloseableHttpClient = {
+  def getConfig(httpProperties: Map[String, String]): RequestConfig = {
     val requestConfigBuilder = RequestConfig.custom()
 
     httpProperties foreach {
@@ -33,6 +32,6 @@ object HttpClientConfigurator extends LazyLogging {
       case (key, _) => logger.error( s"""Could not set the HttpClient "$key" property""")
     }
 
-    HttpClients.custom().setDefaultRequestConfig(requestConfigBuilder.build()).build()
+    requestConfigBuilder.build()
   }
 }

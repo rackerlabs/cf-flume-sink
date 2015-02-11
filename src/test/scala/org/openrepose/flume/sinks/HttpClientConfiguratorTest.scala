@@ -5,14 +5,16 @@ import org.scalatest.{FunSpec, Matchers}
 class HttpClientConfiguratorTest extends FunSpec with Matchers {
 
   describe("buildClient") {
-    ignore("should return a new HttpClient configured appropriately") {
-      val clientProps = Map("connection.request.timeout" -> "1000",
-                            "cookie.spec" -> "ignoreCookies",
-                            "redirects.enabled" -> "false")
+    it("should return a new RequestConfig configured appropriately") {
+      val clientProps = Map("connectionRequestTimeout" -> "1000",
+                            "cookieSpec" -> "ignoreCookies",
+                            "redirectsEnabled" -> "false")
 
-      val httpClient = HttpClientConfigurator.buildClient(clientProps)
+      val reqConf = HttpClientConfigurator.getConfig(clientProps)
 
-      // todo: test client
+      reqConf.getConnectionRequestTimeout shouldBe 1000
+      reqConf.getCookieSpec shouldBe "ignoreCookies"
+      reqConf.isRedirectsEnabled shouldBe false
     }
   }
 }
