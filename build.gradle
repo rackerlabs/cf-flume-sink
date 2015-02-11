@@ -52,17 +52,10 @@ tasks.withType(ScalaCompile) {
     scalaCompileOptions.useAnt = false
 }
 
-task fatJar(type: Jar) {
-    baseName = project.name + '-all'
-    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
-    with jar
-}
-
 publishing {
     publications {
         mavenJar(MavenPublication) {
             artifact jar
-            artifact source: fatJar, classifier: 'all', extension: 'jar'
         }
         mavenRpm(MavenPublication) {
             artifact source: buildRpm, extension: 'rpm'
@@ -93,11 +86,15 @@ ospackage {
         into '/usr/share/doc/cf-flume-sink'
     }
 
-    into '/opt/flume/'
+    into '/opt/flume/plugins.d/cf-flume-sink'
 
-    from(fatJar.outputs.files) {
-        into 'plugins.d'
+    from(jar.outputs.files) {
+        into 'lib'
     }
+    from(configurations.runtime) {
+        into 'libext'
+    }
+
     user 'flume'
     permissionGroup 'flume'
     os 'LINUX'
