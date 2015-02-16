@@ -7,6 +7,8 @@ import org.apache.http.entity.{ContentType, StringEntity}
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.util.EntityUtils
 
+import scala.io.{Codec, Source}
+
 /**
  * A simple class to publish events to Cloud Feeds.
  */
@@ -29,7 +31,8 @@ class CloudFeedPublisher(feedsEndpoint: String, httpProperties: Map[String, Stri
         case HttpStatus.SC_UNAUTHORIZED =>
           throw new UnauthorizedException("Feeds rejected the post as unauthorized")
         case _ =>
-          throw new Exception(s"Feeds rejected the post with $statusCode")
+          val responseBody = Source.fromInputStream(httpResponse.getEntity.getContent)(Codec.UTF8).mkString
+          throw new Exception(s"""Feeds rejected the post with status code: $statusCode, body: $responseBody""")
       }
     } finally {
       EntityUtils.consume(httpResponse.getEntity)
