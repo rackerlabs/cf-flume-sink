@@ -8,9 +8,7 @@ import org.apache.http.entity.{ContentType, StringEntity}
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.util.EntityUtils
 import org.apache.http.{HttpHeaders, HttpStatus}
-import org.json4s.JsonDSL._
-import org.json4s._
-import org.json4s.jackson.JsonMethods._
+import play.api.libs.json.Json
 
 import scala.io.{Codec, Source}
 
@@ -45,11 +43,11 @@ class KeystoneV2Connector(identityHost: String, username: String, password: Stri
 
   private def requestIdentityToken(): String = {
     val httpPost = new HttpPost(s"$identityHost$TOKENS_ENDPOINT")
-    val requestBody = compact(render(
-      "auth" ->
-        ("passwordCredentials" ->
-          ("username" -> username) ~
-          ("password" -> password))))
+    val requestBody = Json.stringify(Json.obj(
+      "auth" -> Json.obj(
+        "passwordCredentials" -> Json.obj(
+          "username" -> username,
+          "password" -> password))))
     httpPost.addHeader(HttpHeaders.ACCEPT, ContentType.APPLICATION_JSON.getMimeType)
     httpPost.setEntity(new StringEntity(requestBody, ContentType.APPLICATION_JSON))
 
@@ -79,10 +77,8 @@ class KeystoneV2Connector(identityHost: String, username: String, password: Stri
   }
 
   private def parseTokenFromJson(tokenStream: InputStream): String = {
-    implicit lazy val jsonFormats = org.json4s.DefaultFormats
-
     val contentString = Source.fromInputStream(tokenStream)(Codec.UTF8).mkString
 
-    (parse(contentString) \ "access" \ "token" \ "id").extract[String]
+    (Json.parse(contentString) \ "access" \ "token" \ "id").as[String]
   }
 }
