@@ -21,8 +21,6 @@ object KeystoneV2Connector {
   private final val TOKENS_ENDPOINT = "/v2.0/tokens"
 }
 
-// note (potential bug): The cachedToken is shared between all instances of this class. If multiple instances are
-//                       instantiated with different credentials, the cachedToken may never prove useful.
 class KeystoneV2Connector(identityHost: String, username: String, password: String, httpProperties: Map[String, String])
   extends LazyLogging {
 
