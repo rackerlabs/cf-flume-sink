@@ -29,7 +29,10 @@ object HttpClientConfigurator extends LazyLogging {
       case ("socketTimeout", value) => requestConfigBuilder.setSocketTimeout(value.toInt)
       case ("staleConnectionCheckEnabled", value) => requestConfigBuilder.setStaleConnectionCheckEnabled(value.toBoolean)
       case ("targetPreferredAuthSchemas", value) => requestConfigBuilder.setTargetPreferredAuthSchemes(value.split(',').toSeq.asJavaCollection)
-      case (key, _) => logger.error( s"""Could not set the HttpClient "$key" property""")
+      case (key, _) =>
+        val errMsg = s"""Unrecognized HttpClient property: $key , unable to configure a HttpClient"""
+        logger.error(errMsg)
+        throw new Exception(errMsg)
     }
 
     requestConfigBuilder.build()
