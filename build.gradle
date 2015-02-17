@@ -11,6 +11,7 @@ buildscript {
         classpath 'org.springframework.build.gradle:propdeps-plugin:0.0.7'
         classpath 'com.netflix.nebula:gradle-ospackage-plugin:2.2.0'
         classpath 'org.hidetake:gradle-ssh-plugin:1.0.5'
+        classpath 'de.undercouch:gradle-download-task:1.2'
     }
 }
 
@@ -23,8 +24,10 @@ apply plugin: 'propdeps-maven'
 apply plugin: 'propdeps-idea'
 apply plugin: 'maven-publish'
 apply plugin: 'maven-publish-auth'
+apply plugin: 'os-package-base'
 apply plugin: 'os-package'
 apply plugin: 'org.hidetake.ssh'
+apply plugin: 'de.undercouch.download'
 
 group = 'org.openrepose'
 version = '1.0.0'
@@ -52,6 +55,50 @@ tasks.withType(ScalaCompile) {
     scalaCompileOptions.useAnt = false
 }
 
+import de.undercouch.gradle.tasks.download.Download
+
+def flumeVer = "1.5.2" // todo: pull this version out of gradle properties
+def flumeDir = "$buildDir/apache-flume-$flumeVer-bin"
+def flumeArchive = "${flumeDir}.tar.gz"
+def flumeDistroUrl = "http://www.apache.org/dist/flume/$flumeVer/apache-flume-$flumeVer-bin.tar.gz"
+
+task downloadFlume(type: Download) {
+    src flumeDistroUrl
+    dest buildDir
+}
+
+task downloadAndUnpackFlume(dependsOn: downloadFlume, type: Copy) {
+    from tarTree(resources.gzip(flumeArchive))
+    into buildDir
+}
+
+task buildFlumeRpm(dependsOn: downloadAndUnpackFlume, type: Rpm) {
+    packageName "flume"
+    version flumeVer
+    packageDescription 'Installs Flume with Repose recommended settings.'
+
+    from flumeDir
+    into '/opt/flume'
+}
+
+task buildFlumeDeb(dependsOn: downloadAndUnpackFlume, type: Deb) {
+    packageName "flume"
+    version flumeVer
+    packageDescription 'Installs Flume with Repose recommended settings.'
+
+    from flumeDir
+    into '/opt/flume'
+}
+
+task deployFlume << {
+    ssh.run {
+        session(remotes.packageRepo) {
+            put from: buildFlumeRpm.outputs.files, into: '/RELEASES'
+            put from: buildFlumeDeb.outputs.files, into: '/RELEASES'
+        }
+    }
+}
+
 publishing {
     publications {
         mavenJar(MavenPublication) {
@@ -73,13 +120,27 @@ publishing {
 }
 
 ospackage {
-    packageDescription '''Installs a custom Flume sink which sends events over HTTP to a Cloud Feeds endpoint using \
-                         |the AtomPub protocol.'''.stripMargin()
+    preInstall file('preInstall.sh')
 
     license 'Apache License, Version 2.0'
     url 'https://github.com/rackerlabs/cf-flume-sink'
 
-    preInstall file('preInstall.sh')
+    user 'flume'
+    permissionGroup 'flume'
+    os 'LINUX'
+}
+
+remotes {
+    packageRepo {
+        host = '50.56.69.25'
+        user = 'repose-dev'
+        identity = file('~/.ssh/id_rsa')
+    }
+}
+
+buildRpm {
+    packageDescription '''Installs a custom Flume sink which sends events over HTTP to a Cloud Feeds endpoint using \
+                         |the AtomPub protocol.'''.stripMargin()
 
     from('LICENSE.txt') {
         fileType LICENSE
@@ -95,19 +156,28 @@ ospackage {
         into 'libext'
     }
 
-    user 'flume'
-    permissionGroup 'flume'
-    os 'LINUX'
-
     // todo: Depends on our Flume packages
 }
 
-remotes {
-    packageRepo {
-        host = '50.56.69.25'
-        user = 'repose-dev'
-        identity = file('~/.ssh/id_rsa')
+buildDeb {
+    packageDescription '''Installs a custom Flume sink which sends events over HTTP to a Cloud Feeds endpoint using \
+                         |the AtomPub protocol.'''.stripMargin()
+
+    from('LICENSE.txt') {
+        fileType LICENSE
+        into '/usr/share/doc/cf-flume-sink'
     }
+
+    into '/opt/flume/plugins.d/cf-flume-sink'
+
+    from(jar.outputs.files) {
+        into 'lib'
+    }
+    from(configurations.runtime) {
+        into 'libext'
+    }
+
+    // todo: Depends on our Flume packages
 }
 
 task deploy << {
