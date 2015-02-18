@@ -96,11 +96,7 @@ ospackage {
         into 'libext'
     }
 
-    // todo: Depends on our Flume packages
-}
-
-['buildRpm', 'buildDeb'].each {
-    tasks.getByName(it, sinkPackageConf)
+    requires('flume')
 }
 
 apply from: '../remotesConfig.gradle'
@@ -115,4 +111,4 @@ task('deploy', dependsOn: ['buildRpm', 'buildDeb']) << {
 }
 
 //The build task needs to also build the build rpm and deb
-tasks.build.dependsOn(['buildRpm', 'buildDeb'])
+tasks.build.dependsOn 'buildRpm', 'buildDeb'
