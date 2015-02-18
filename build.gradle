@@ -55,6 +55,34 @@ tasks.withType(ScalaCompile) {
     scalaCompileOptions.useAnt = false
 }
 
+publishing {
+    publications {
+        mavenJar(MavenPublication) {
+            artifact jar
+        }
+        mavenRpm(MavenPublication) {
+            artifact source: buildRpm, extension: 'rpm'
+        }
+        mavenDeb(MavenPublication) {
+            artifact source: buildDeb, extension: 'deb'
+        }
+    }
+    repositories {
+        maven {
+            name 'releases.maven.research.rackspace.com'
+            url 'https://maven.research.rackspacecloud.com/content/repositories/releases'
+        }
+    }
+}
+
+ospackage {
+    preInstall file('preInstall.sh')
+
+    user 'flume'
+    permissionGroup 'flume'
+    os 'LINUX'
+}
+
 import de.undercouch.gradle.tasks.download.Download
 
 def flumeVer = "1.5.2" // todo: pull this version out of gradle properties
@@ -72,8 +100,8 @@ task downloadAndUnpackFlume(dependsOn: downloadFlume, type: Copy) {
     into buildDir
 }
 
-task buildFlumeRpm(dependsOn: downloadAndUnpackFlume, type: Rpm) {
-    packageName "flume"
+def flumePackageConf = {
+    packageName 'flume'
     version flumeVer
     packageDescription 'Installs Flume with Repose recommended settings.'
 
@@ -81,53 +109,36 @@ task buildFlumeRpm(dependsOn: downloadAndUnpackFlume, type: Rpm) {
     into '/opt/flume'
 }
 
-task buildFlumeDeb(dependsOn: downloadAndUnpackFlume, type: Deb) {
-    packageName "flume"
-    version flumeVer
-    packageDescription 'Installs Flume with Repose recommended settings.'
-
-    from flumeDir
-    into '/opt/flume'
+['buildFlumeRpm': Rpm, 'buildFlumeDeb': Deb].each {
+    tasks.create(name: it.key, type: it.value, dependsOn: downloadAndUnpackFlume)
+    tasks.getByName(it.key, flumePackageConf)
 }
 
-task deployFlume << {
-    ssh.run {
-        session(remotes.packageRepo) {
-            put from: buildFlumeRpm.outputs.files, into: '/RELEASES'
-            put from: buildFlumeDeb.outputs.files, into: '/RELEASES'
-        }
-    }
-}
-
-publishing {
-    publications {
-        mavenJar(MavenPublication) {
-            artifact jar
-        }
-        mavenRpm(MavenPublication) {
-            artifact source: buildRpm, extension: 'rpm'
-        }
-        mavenDeb(MavenPublication) {
-            artifact source: buildDeb, extension: 'deb'
-        }
-    }
-    repositories {
-        maven {
-            name "releases.maven.research.rackspace.com"
-            url "https://maven.research.rackspacecloud.com/content/repositories/releases"
-        }
-    }
-}
-
-ospackage {
-    preInstall file('preInstall.sh')
-
-    license 'Apache License, Version 2.0'
+def sinkPackageConf = {
+    packageDescription 'Installs a custom Flume sink which sends events over HTTP to a Cloud Feeds endpoint using \
+                         |the AtomPub protocol.'.stripMargin()
     url 'https://github.com/rackerlabs/cf-flume-sink'
+    license 'Apache License, Version 2.0'
 
-    user 'flume'
-    permissionGroup 'flume'
-    os 'LINUX'
+    from('LICENSE.txt') {
+        fileType LICENSE
+        into '/usr/share/doc/cf-flume-sink'
+    }
+
+    into '/opt/flume/plugins.d/cf-flume-sink'
+
+    from(jar.outputs.files) {
+        into 'lib'
+    }
+    from(configurations.runtime) {
+        into 'libext'
+    }
+
+    // todo: Depends on our Flume packages
+}
+
+['buildRpm', 'buildDeb'].each {
+    tasks.getByName(it, sinkPackageConf)
 }
 
 remotes {
@@ -138,46 +149,13 @@ remotes {
     }
 }
 
-buildRpm {
-    packageDescription '''Installs a custom Flume sink which sends events over HTTP to a Cloud Feeds endpoint using \
-                         |the AtomPub protocol.'''.stripMargin()
-
-    from('LICENSE.txt') {
-        fileType LICENSE
-        into '/usr/share/doc/cf-flume-sink'
+task deployFlume << {
+    ssh.run {
+        session(remotes.packageRepo) {
+            put from: buildFlumeRpm.outputs.files, into: '/RELEASES'
+            put from: buildFlumeDeb.outputs.files, into: '/RELEASES'
+        }
     }
-
-    into '/opt/flume/plugins.d/cf-flume-sink'
-
-    from(jar.outputs.files) {
-        into 'lib'
-    }
-    from(configurations.runtime) {
-        into 'libext'
-    }
-
-    // todo: Depends on our Flume packages
-}
-
-buildDeb {
-    packageDescription '''Installs a custom Flume sink which sends events over HTTP to a Cloud Feeds endpoint using \
-                         |the AtomPub protocol.'''.stripMargin()
-
-    from('LICENSE.txt') {
-        fileType LICENSE
-        into '/usr/share/doc/cf-flume-sink'
-    }
-
-    into '/opt/flume/plugins.d/cf-flume-sink'
-
-    from(jar.outputs.files) {
-        into 'lib'
-    }
-    from(configurations.runtime) {
-        into 'libext'
-    }
-
-    // todo: Depends on our Flume packages
 }
 
 task deploy << {
