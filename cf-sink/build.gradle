@@ -109,24 +109,9 @@ def sinkPackageConf = {
     tasks.getByName(it, sinkPackageConf)
 }
 
-remotes {
-    packageRepo {
-        host = '50.56.69.25'
-        user = 'repose-dev'
-        identity = file('~/.ssh/id_rsa')
-    }
-}
+apply from: '../remotesConfig.gradle'
 
-task deployFlume << {
-    ssh.run {
-        session(remotes.packageRepo) {
-            put from: buildFlumeRpm.outputs.files, into: '/RELEASES'
-            put from: buildFlumeDeb.outputs.files, into: '/RELEASES'
-        }
-    }
-}
-
-task deploy << {
+task('deploy', dependsOn: ['buildRpm', 'buildDeb']) << {
     ssh.run {
         session(remotes.packageRepo) {
             put from: buildRpm.outputs.files, into: '/RELEASES'
@@ -134,3 +119,7 @@ task deploy << {
         }
     }
 }
+
+
+//The build task needs to also build the build rpm and deb
+tasks.build.dependsOn(['buildRpm', 'buildDeb'])

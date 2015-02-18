@@ -52,3 +52,26 @@ def flumePackageConf = {
     tasks.create(name: it.key, type: it.value, dependsOn: downloadAndUnpackFlume)
     tasks.getByName(it.key, flumePackageConf)
 }
+
+apply from: '../remotesConfig.gradle'
+
+//remotes {
+//    packageRepo {
+//        host = '50.56.69.25'
+//        user = 'repose-dev'
+//        identity = new File(System.properties['user.home'], '.ssh/id_rsa')
+//    }
+//}
+
+
+task('deployFlume', dependsOn: ['buildFlumeRpm', 'buildFlumeDeb']) << {
+    ssh.run {
+        session(remotes.packageRepo) {
+            put from: buildFlumeRpm.outputs.files, into: '/RELEASES'
+            put from: buildFlumeDeb.outputs.files, into: '/RELEASES'
+        }
+    }
+}
+
+
+task('build', dependsOn: ['buildFlumeRpm', 'buildFlumeDeb'])
