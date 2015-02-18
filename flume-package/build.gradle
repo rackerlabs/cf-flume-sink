@@ -16,7 +16,7 @@ buildscript {
 
 apply plugin: 'maven-publish'
 apply plugin: 'maven-publish-auth'
-apply plugin: 'os-package-base'
+apply plugin: 'os-package'
 apply plugin: 'org.hidetake.ssh'
 apply plugin: 'de.undercouch.download'
 
@@ -25,10 +25,10 @@ group = 'org.openrepose'
 publishing {
     publications {
         mavenRpm(MavenPublication) {
-            artifact source: buildFlumeRpm, extension: 'rpm'
+            artifact source: buildRpm, extension: 'rpm'
         }
         mavenDeb(MavenPublication) {
-            artifact source: buildFlumeDeb, extension: 'deb'
+            artifact source: buildDeb, extension: 'deb'
         }
     }
     repositories {
@@ -70,20 +70,18 @@ ospackage {
     into '/opt/flume'
 }
 
-['buildFlumeRpm': Rpm, 'buildFlumeDeb': Deb].each {
-    tasks.create(name: it.key, type: it.value, dependsOn: unpackFlume)
-    tasks.getByName(it.key, flumePackageConf)
-}
+buildRpm.dependsOn unpackFlume
+buildDeb.dependsOn unpackFlume
 
 apply from: '../remotesConfig.gradle'
 
-task('deployFlume', dependsOn: ['buildFlumeRpm', 'buildFlumeDeb']) << {
+task('deployFlume', dependsOn: ['buildRpm', 'buildDeb']) << {
     ssh.run {
         session(remotes.packageRepo) {
-            put from: buildFlumeRpm.outputs.files, into: '/RELEASES'
-            put from: buildFlumeDeb.outputs.files, into: '/RELEASES'
+            put from: buildRpm.outputs.files, into: '/RELEASES'
+            put from: buildDeb.outputs.files, into: '/RELEASES'
         }
     }
 }
 
-task('build', dependsOn: ['buildFlumeRpm', 'buildFlumeDeb'])
+task('build', dependsOn: ['buildRpm', 'buildDeb'])
