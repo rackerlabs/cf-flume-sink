@@ -58,7 +58,7 @@ task downloadFlume(type: Download) {
     dest buildDir
 }
 
-task downloadAndUnpackFlume(dependsOn: downloadFlume, type: Copy) {
+task unpackFlume(dependsOn: downloadFlume, type: Copy) {
     from tarTree(resources.gzip(flumeArchive))
     into buildDir
 }
@@ -73,7 +73,7 @@ def flumePackageConf = {
 }
 
 ['buildFlumeRpm': Rpm, 'buildFlumeDeb': Deb].each {
-    tasks.create(name: it.key, type: it.value, dependsOn: downloadAndUnpackFlume)
+    tasks.create(name: it.key, type: it.value, dependsOn: unpackFlume)
     tasks.getByName(it.key, flumePackageConf)
 }
 
