@@ -72,8 +72,8 @@ publishing {
 
 ospackage {
     packageName 'cf-flume-sink'
-    packageDescription 'Installs a custom Flume sink which sends events over HTTP to a Cloud Feeds endpoint using \
-                         |the AtomPub protocol.'.stripMargin()
+    packageDescription 'Installs a custom Flume sink which sends events over HTTP to a Cloud Feeds endpoint using ' +
+                       'the AtomPub protocol.'
     url 'https://github.com/rackerlabs/cf-flume-sink'
     license 'Apache License, Version 2.0'
     preInstall file("$parent.projectDir/preInstall.sh")
