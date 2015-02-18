@@ -1,0 +1,54 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven { url 'http://repository.jboss.org/nexus/content/groups/public/' }
+        maven { url 'https://repo.spring.io/plugins-release' }
+        jcenter()
+    }
+    dependencies {
+        classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.1'
+        classpath 'com.netflix.nebula:gradle-ospackage-plugin:2.2.0'
+        classpath 'org.hidetake:gradle-ssh-plugin:1.0.5'
+        classpath 'de.undercouch:gradle-download-task:1.2'
+    }
+}
+
+apply plugin: 'maven-publish'
+apply plugin: 'maven-publish-auth'
+apply plugin: 'os-package-base'
+apply plugin: 'os-package'
+apply plugin: 'org.hidetake.ssh'
+apply plugin: 'de.undercouch.download'
+
+group = 'org.openrepose'
+
+import de.undercouch.gradle.tasks.download.Download
+
+def flumeDir = "$buildDir/apache-flume-$flumeVersion-bin"
+def flumeArchive = "${flumeDir}.tar.gz"
+def flumeDistroUrl = "http://www.apache.org/dist/flume/$flumeVersion/apache-flume-$flumeVersion-bin.tar.gz"
+
+task downloadFlume(type: Download) {
+    src flumeDistroUrl
+    dest buildDir
+}
+
+task downloadAndUnpackFlume(dependsOn: downloadFlume, type: Copy) {
+    from tarTree(resources.gzip(flumeArchive))
+    into buildDir
+}
+
+def flumePackageConf = {
+    packageName 'flume'
+    version flumeVersion
+    packageDescription 'Installs Flume with Repose recommended settings.'
+
+    from flumeDir
+    into '/opt/flume'
+}
+
+['buildFlumeRpm': Rpm, 'buildFlumeDeb': Deb].each {
+    tasks.create(name: it.key, type: it.value, dependsOn: downloadAndUnpackFlume)
+    tasks.getByName(it.key, flumePackageConf)
+}
