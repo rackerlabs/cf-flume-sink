@@ -11,7 +11,6 @@ buildscript {
         classpath 'org.springframework.build.gradle:propdeps-plugin:0.0.7'
         classpath 'com.netflix.nebula:gradle-ospackage-plugin:2.2.0'
         classpath 'org.hidetake:gradle-ssh-plugin:1.0.5'
-        classpath 'de.undercouch:gradle-download-task:1.2'
     }
 }
 
@@ -24,7 +23,6 @@ apply plugin: 'maven-publish'
 apply plugin: 'maven-publish-auth'
 apply plugin: 'os-package'
 apply plugin: 'org.hidetake.ssh'
-apply plugin: 'de.undercouch.download'
 
 group = 'org.openrepose'
 version = '1.0.0'
