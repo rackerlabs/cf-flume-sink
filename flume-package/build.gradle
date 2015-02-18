@@ -56,7 +56,7 @@ task unpackFlume(dependsOn: downloadFlume, type: Copy) {
 }
 
 ospackage {
-    packageName 'flume'
+    packageName 'repose-flume'
     version flumeVersion
     packageDescription 'Installs Flume with Repose recommended settings.'
 
