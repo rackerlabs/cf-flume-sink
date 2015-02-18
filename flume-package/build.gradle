@@ -39,14 +39,6 @@ publishing {
     }
 }
 
-ospackage {
-    preInstall file("$parent.projectDir/preInstall.sh")
-
-    user 'flume'
-    permissionGroup 'flume'
-    os 'LINUX'
-}
-
 import de.undercouch.gradle.tasks.download.Download
 
 def flumeDir = "$buildDir/apache-flume-$flumeVersion-bin"
@@ -63,10 +55,16 @@ task unpackFlume(dependsOn: downloadFlume, type: Copy) {
     into buildDir
 }
 
-def flumePackageConf = {
+ospackage {
     packageName 'flume'
     version flumeVersion
     packageDescription 'Installs Flume with Repose recommended settings.'
+
+    preInstall file("$parent.projectDir/preInstall.sh")
+
+    user 'flume'
+    permissionGroup 'flume'
+    os 'LINUX'
 
     from flumeDir
     into '/opt/flume'
