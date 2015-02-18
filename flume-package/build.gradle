@@ -55,15 +55,6 @@ def flumePackageConf = {
 
 apply from: '../remotesConfig.gradle'
 
-//remotes {
-//    packageRepo {
-//        host = '50.56.69.25'
-//        user = 'repose-dev'
-//        identity = new File(System.properties['user.home'], '.ssh/id_rsa')
-//    }
-//}
-
-
 task('deployFlume', dependsOn: ['buildFlumeRpm', 'buildFlumeDeb']) << {
     ssh.run {
         session(remotes.packageRepo) {
