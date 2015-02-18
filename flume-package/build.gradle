@@ -17,7 +17,6 @@ buildscript {
 apply plugin: 'maven-publish'
 apply plugin: 'maven-publish-auth'
 apply plugin: 'os-package-base'
-apply plugin: 'os-package'
 apply plugin: 'org.hidetake.ssh'
 apply plugin: 'de.undercouch.download'
 
@@ -63,6 +62,5 @@ task('deployFlume', dependsOn: ['buildFlumeRpm', 'buildFlumeDeb']) << {
         }
     }
 }
-
 
 task('build', dependsOn: ['buildFlumeRpm', 'buildFlumeDeb'])

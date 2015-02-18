@@ -22,7 +22,6 @@ apply plugin: 'propdeps'
 apply plugin: 'propdeps-maven'
 apply plugin: 'maven-publish'
 apply plugin: 'maven-publish-auth'
-apply plugin: 'os-package-base'
 apply plugin: 'os-package'
 apply plugin: 'org.hidetake.ssh'
 apply plugin: 'de.undercouch.download'
@@ -81,7 +80,6 @@ ospackage {
     os 'LINUX'
 }
 
-
 def sinkPackageConf = {
     packageDescription 'Installs a custom Flume sink which sends events over HTTP to a Cloud Feeds endpoint using \
                          |the AtomPub protocol.'.stripMargin()
@@ -119,7 +117,6 @@ task('deploy', dependsOn: ['buildRpm', 'buildDeb']) << {
         }
     }
 }
-
 
 //The build task needs to also build the build rpm and deb
 tasks.build.dependsOn(['buildRpm', 'buildDeb'])
