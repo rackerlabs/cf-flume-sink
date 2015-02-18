@@ -73,7 +73,7 @@ publishing {
 }
 
 ospackage {
-    preInstall file('preInstall.sh')
+    preInstall file("$parent.projectDir/preInstall.sh")
 
     user 'flume'
     permissionGroup 'flume'

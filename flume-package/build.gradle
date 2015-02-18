@@ -22,6 +22,31 @@ apply plugin: 'de.undercouch.download'
 
 group = 'org.openrepose'
 
+publishing {
+    publications {
+        mavenRpm(MavenPublication) {
+            artifact source: buildFlumeRpm, extension: 'rpm'
+        }
+        mavenDeb(MavenPublication) {
+            artifact source: buildFlumeDeb, extension: 'deb'
+        }
+    }
+    repositories {
+        maven {
+            name 'releases.maven.research.rackspace.com'
+            url 'https://maven.research.rackspacecloud.com/content/repositories/releases'
+        }
+    }
+}
+
+ospackage {
+    preInstall file("$parent.projectDir/preInstall.sh")
+
+    user 'flume'
+    permissionGroup 'flume'
+    os 'LINUX'
+}
+
 import de.undercouch.gradle.tasks.download.Download
 
 def flumeDir = "$buildDir/apache-flume-$flumeVersion-bin"
