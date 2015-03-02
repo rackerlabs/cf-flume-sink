@@ -19,6 +19,8 @@ class CloudFeedPublisher(feedsEndpoint: String, httpProperties: Map[String, Stri
     .build()
 
   def publish(atomMessage: String, identityToken: String): Unit = {
+    logger.debug("Attempting to publish to cloud feeds")
+
     val httpPost = new HttpPost(feedsEndpoint)
     httpPost.addHeader("X-AUTH-TOKEN", identityToken)
     httpPost.setEntity(new StringEntity(atomMessage, ContentType.APPLICATION_ATOM_XML))
