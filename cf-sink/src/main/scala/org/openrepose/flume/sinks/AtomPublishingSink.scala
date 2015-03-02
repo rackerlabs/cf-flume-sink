@@ -26,6 +26,8 @@ class AtomPublishingSink extends AbstractSink with Configurable with LazyLogging
   }
 
   override def process(): Status = {
+    def failureMessage(ex: Exception) = logger.warn(s"Event could not be processed at this time: ${ex.getMessage}")
+
     val channel = getChannel
     val txn = channel.getTransaction
 
@@ -47,9 +49,9 @@ class AtomPublishingSink extends AbstractSink with Configurable with LazyLogging
             throw er
           case ue: UnauthorizedException =>
             keystoneV2Connector.invalidateCachedToken()
-            logger.warn(s"Event could not be processed at this time: ${ue.getMessage}")
+            failureMessage(ue)
           case _ =>
-            logger.warn(s"Event could not be processed at this time: ${t.getMessage}")
+            failureMessage _
         }
 
         Status.BACKOFF

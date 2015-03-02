@@ -1,0 +1,87 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven { url 'http://repository.jboss.org/nexus/content/groups/public/' }
+        maven { url 'https://repo.spring.io/plugins-release' }
+        jcenter()
+    }
+    dependencies {
+        classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.1'
+        classpath 'com.netflix.nebula:gradle-ospackage-plugin:2.2.0'
+        classpath 'org.hidetake:gradle-ssh-plugin:1.0.5'
+        classpath 'de.undercouch:gradle-download-task:1.2'
+    }
+}
+
+apply plugin: 'maven-publish'
+apply plugin: 'maven-publish-auth'
+apply plugin: 'os-package'
+apply plugin: 'org.hidetake.ssh'
+apply plugin: 'de.undercouch.download'
+
+group = 'org.openrepose'
+
+publishing {
+    publications {
+        mavenRpm(MavenPublication) {
+            artifact source: buildRpm, extension: 'rpm'
+        }
+        mavenDeb(MavenPublication) {
+            artifact source: buildDeb, extension: 'deb'
+        }
+    }
+    repositories {
+        maven {
+            name 'releases.maven.research.rackspace.com'
+            url 'https://maven.research.rackspacecloud.com/content/repositories/releases'
+        }
+    }
+}
+
+import de.undercouch.gradle.tasks.download.Download
+
+def flumeDir = "$buildDir/apache-flume-$flumeVersion-bin"
+def flumeArchive = "${flumeDir}.tar.gz"
+def flumeDistroUrl = "http://www.apache.org/dist/flume/$flumeVersion/apache-flume-$flumeVersion-bin.tar.gz"
+
+task downloadFlume(type: Download) {
+    src flumeDistroUrl
+    dest buildDir
+}
+
+task unpackFlume(dependsOn: downloadFlume, type: Copy) {
+    from tarTree(resources.gzip(flumeArchive))
+    into buildDir
+}
+
+ospackage {
+    packageName 'flume-repose'
+    version flumeVersion
+    packageDescription 'Installs Flume with Repose recommended settings.'
+
+    preInstall file("$parent.projectDir/preInstall.sh")
+
+    user 'flume'
+    permissionGroup 'flume'
+    os 'LINUX'
+
+    from flumeDir
+    into '/opt/flume'
+}
+
+buildRpm.dependsOn unpackFlume
+buildDeb.dependsOn unpackFlume
+
+apply from: '../remotesConfig.gradle'
+
+task('deployFlume', dependsOn: ['buildRpm', 'buildDeb']) << {
+    ssh.run {
+        session(remotes.packageRepo) {
+            put from: buildRpm.outputs.files, into: '/RELEASES'
+            put from: buildDeb.outputs.files, into: '/RELEASES'
+        }
+    }
+}
+
+task('build', dependsOn: ['buildRpm', 'buildDeb'])
