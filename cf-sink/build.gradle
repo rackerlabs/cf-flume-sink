@@ -9,6 +9,7 @@ buildscript {
     dependencies {
         classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.1'
         classpath 'org.springframework.build.gradle:propdeps-plugin:0.0.7'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.0' // todo: get rid of this when Flume supports libext
         classpath 'com.netflix.nebula:gradle-ospackage-plugin:2.2.0'
         classpath 'org.hidetake:gradle-ssh-plugin:1.0.5'
     }
@@ -23,6 +24,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'maven-publish-auth'
 apply plugin: 'os-package'
 apply plugin: 'org.hidetake.ssh'
+apply plugin: 'com.github.johnrengelman.shadow'
 
 group = 'org.openrepose'
 version = '1.0.0'
@@ -50,10 +52,15 @@ tasks.withType(ScalaCompile) {
     scalaCompileOptions.useAnt = false
 }
 
+shadowJar {
+    relocate 'org.apache.commons.httpclient', 'org.openrepose.org.apache.commons.httpclient'
+    relocate 'org.apache.http', 'org.openrepose.org.apache.http'
+}
+
 publishing {
     publications {
         mavenJar(MavenPublication) {
-            artifact jar
+            artifact shadowJar
         }
         mavenRpm(MavenPublication) {
             artifact source: buildRpm, extension: 'rpm'
@@ -89,12 +96,14 @@ ospackage {
 
     into '/opt/flume/plugins.d/cf-flume-sink'
 
-    from(jar.outputs.files) {
+    from(shadowJar.outputs.files) {
         into 'lib'
     }
+    /* todo: replace fat jar with dependency jars here when Flume supports it without classpath issues
     from(configurations.runtime) {
         into 'libext'
     }
+    */
 
     requires('flume-repose')
 }
