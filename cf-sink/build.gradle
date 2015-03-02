@@ -96,7 +96,7 @@ ospackage {
         into 'libext'
     }
 
-    requires('flume')
+    requires('flume-repose')
 }
 
 apply from: '../remotesConfig.gradle'
