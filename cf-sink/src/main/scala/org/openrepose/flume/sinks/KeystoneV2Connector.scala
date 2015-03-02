@@ -42,6 +42,8 @@ class KeystoneV2Connector(identityHost: String, username: String, password: Stri
   }
 
   private def requestIdentityToken(): String = {
+    logger.debug("Attempting to get token from identity")
+
     val httpPost = new HttpPost(s"$identityHost$TOKENS_ENDPOINT")
     val requestBody = Json.stringify(Json.obj(
       "auth" -> Json.obj(
