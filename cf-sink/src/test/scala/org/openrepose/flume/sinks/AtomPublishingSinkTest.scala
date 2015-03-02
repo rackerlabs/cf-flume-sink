@@ -64,5 +64,21 @@ class AtomPublishingSinkTest extends FunSpec with Matchers with MockitoSugar {
       verify(mockTransaction, times(1)).rollback()
       verify(mockTransaction, times(1)).close()
     }
+    it("should rollback when there are no events in the channel") {
+      val mockChannel = mock[Channel]
+      val mockTransaction = mock[Transaction]
+      when(mockChannel.getTransaction).thenReturn(mockTransaction)
+      when(mockChannel.take).thenReturn(null)
+
+      val sink = new AtomPublishingSink()
+      sink.setChannel(mockChannel)
+
+      val status = sink.process()
+
+      status should be theSameInstanceAs Status.BACKOFF
+      verify(mockTransaction, times(1)).begin()
+      verify(mockTransaction, times(1)).rollback()
+      verify(mockTransaction, times(1)).close()
+    }
   }
 }

@@ -33,12 +33,17 @@ class AtomPublishingSink extends AbstractSink with Configurable with LazyLogging
 
     txn.begin()
     try {
-      val event = channel.take()
+      Option(channel.take()) match {
+        case Some(event) =>
+          feedPublisher.publish(AtomFormatter.wrap(new String(event.getBody)), keystoneV2Connector.getToken)
 
-      feedPublisher.publish(AtomFormatter.wrap(new String(event.getBody)), keystoneV2Connector.getToken)
-
-      txn.commit()
-      Status.READY
+          txn.commit()
+          Status.READY
+        case None =>
+          logger.trace("Process method triggered, but no events could be pulled off the channel")
+          txn.rollback()
+          Status.BACKOFF
+      }
     } catch {
       case t: Throwable =>
         txn.rollback()
