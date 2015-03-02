@@ -2,13 +2,17 @@ package org.openrepose.flume.sinks
 
 import java.util.{Date, UUID}
 
+import com.typesafe.scalalogging.LazyLogging
 import org.apache.abdera.Abdera
 
-object AtomFormatter {
+object AtomFormatter extends LazyLogging {
 
   private val abdera = new Abdera()
 
   def wrap(content: String): String = {
+    logger.debug("Attempting to marshal message into atom")
+    logger.trace(content)
+
     val now = new Date()
 
     val entry = abdera.newEntry
