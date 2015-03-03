@@ -26,7 +26,10 @@ class AtomPublishingSink extends AbstractSink with Configurable with LazyLogging
   }
 
   override def process(): Status = {
-    def failureMessage(t: Throwable) = logger.warn(s"Event could not be processed at this time: ${t.getMessage}")
+    def failureMessage(t: Throwable) = {
+      logger.warn(s"Event could not be processed at this time: ${t.getMessage}")
+      logger.trace("", t)
+    }
 
     val channel = getChannel
     val txn = channel.getTransaction
