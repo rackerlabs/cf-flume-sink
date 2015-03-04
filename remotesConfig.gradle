@@ -3,6 +3,6 @@ remotes {
         host = '50.56.69.25'
         user = 'repose-dev'
         knownHosts = allowAnyHosts
-        identity = file(new File(System.properties['user.home'], '.ssh/id_rsa'))
+        identity = file("${System.properties['user.home']}/.ssh/id_rsa")
     }
 }
