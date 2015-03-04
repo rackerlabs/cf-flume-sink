@@ -2,6 +2,6 @@ remotes {
     packageRepo {
         host = '50.56.69.25'
         user = 'repose-dev'
-        identity = new File(System.properties['user.home'], '.ssh/id_rsa')
+        identity = file(new File(System.properties['user.home'], '.ssh/id_rsa'))
     }
 }
