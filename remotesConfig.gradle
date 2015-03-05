@@ -1,8 +1,13 @@
 remotes {
     packageRepo {
-        host = 'repo.openrepose.org'
         user = 'repose-dev'
-        identity = file("${System.properties['user.home']}/.ssh/id_rsa")
+        host = 'repo.openrepose.org'
+        def repoKey = new File("${System.properties['user.home']}/.ssh/repo_key")
+        if (repoKey.exists()) {
+            identity = file(repoKey)
+        } else {
+            identity = file("${System.properties['user.home']}/.ssh/id_rsa")
+        }
         def systemKnownHosts = new File("/etc/ssh/ssh_known_hosts")
         if (systemKnownHosts.exists()) {
             knownHosts = file(systemKnownHosts)
