@@ -113,8 +113,8 @@ apply from: '../remotesConfig.gradle'
 task('deploy', dependsOn: ['buildRpm', 'buildDeb']) << {
     ssh.run {
         session(remotes.packageRepo) {
-            put from: buildRpm.outputs.files, into: '~/RELEASES'
-            put from: buildDeb.outputs.files, into: '~/RELEASES'
+            put from: buildRpm.outputs.files, into: '/home/repose-dev/RELEASES'
+            put from: buildDeb.outputs.files, into: '/home/repose-dev/RELEASES'
         }
     }
 }
