@@ -2,7 +2,10 @@ remotes {
     packageRepo {
         host = '50.56.69.25'
         user = 'repose-dev'
-        knownHosts = allowAnyHosts
         identity = file("${System.properties['user.home']}/.ssh/id_rsa")
+        def systemKnownHosts = new File("/etc/ssh/ssh_known_hosts")
+        if (systemKnownHosts.exists()) {
+            knownHosts = file(systemKnownHosts)
+        }
     }
 }
