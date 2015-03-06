@@ -27,7 +27,7 @@ apply plugin: 'org.hidetake.ssh'
 apply plugin: 'com.github.johnrengelman.shadow'
 
 group = 'org.openrepose'
-version = '1.0.0'
+version = '1.0.1'
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
 
@@ -72,7 +72,7 @@ publishing {
     repositories {
         maven {
             name 'releases.maven.research.rackspace.com'
-            url 'https://maven.research.rackspacecloud.com/content/repositories/releases'
+            url 'http://maven.research.rackspacecloud.com/content/repositories/releases'
         }
     }
 }
