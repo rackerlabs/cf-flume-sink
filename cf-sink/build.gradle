@@ -27,7 +27,7 @@ apply plugin: 'org.hidetake.ssh'
 apply plugin: 'com.github.johnrengelman.shadow'
 
 group = 'org.openrepose'
-version = '1.0.2'
+version = '1.0.4'
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
 
@@ -60,12 +60,15 @@ shadowJar {
 publishing {
     publications {
         mavenJar(MavenPublication) {
+            artifactId "${Project.getName()}-jar"
             artifact shadowJar
         }
         mavenRpm(MavenPublication) {
+            artifactId "${Project.getName()}-rpm"
             artifact source: buildRpm, extension: 'rpm'
         }
         mavenDeb(MavenPublication) {
+            artifactId "${Project.getName()}-deb"
             artifact source: buildDeb, extension: 'deb'
         }
     }
