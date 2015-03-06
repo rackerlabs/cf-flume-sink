@@ -25,9 +25,13 @@ group = 'org.openrepose'
 publishing {
     publications {
         mavenRpm(MavenPublication) {
+            artifactId 'flume-repose-rpm'
+            version "$flumeVersion"
             artifact source: buildRpm, extension: 'rpm'
         }
         mavenDeb(MavenPublication) {
+            artifactId 'flume-repose-deb'
+            version "$flumeVersion"
             artifact source: buildDeb, extension: 'deb'
         }
     }
@@ -78,8 +82,8 @@ apply from: '../remotesConfig.gradle'
 task('deployFlume', dependsOn: ['buildRpm', 'buildDeb']) << {
     ssh.run {
         session(remotes.packageRepo) {
-            put from: buildRpm.outputs.files, into: '/RELEASES'
-            put from: buildDeb.outputs.files, into: '/RELEASES'
+            put from: buildRpm.outputs.files, into: '/home/repose-dev/RELEASES'
+            put from: buildDeb.outputs.files, into: '/home/repose-dev/RELEASES'
         }
     }
 }
