@@ -28,10 +28,10 @@ class CloudFeedPublisher(feedsEndpoint: String, httpProperties: Map[String, Stri
     try {
       val statusCode = httpResponse.getStatusLine.getStatusCode
       statusCode match {
-        case HttpStatus.SC_OK =>
-          logger.debug("Successfully published to cloud feeds")
         case HttpStatus.SC_UNAUTHORIZED =>
           throw new UnauthorizedException("Feeds rejected the post as unauthorized")
+        case _ if statusCode >= 200 && statusCode < 300 =>
+          logger.debug("Successfully published to cloud feeds")
         case _ =>
           val responseBody = Source.fromInputStream(httpResponse.getEntity.getContent)(Codec.UTF8).mkString
           throw new Exception(s"""Feeds rejected the post with status code: $statusCode, body: $responseBody""")
