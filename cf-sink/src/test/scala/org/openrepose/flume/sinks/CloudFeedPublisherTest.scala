@@ -6,13 +6,13 @@ import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
 import org.eclipse.jetty.server.handler.AbstractHandler
-import org.eclipse.jetty.server.{Request, Server, ServerConnector}
+import org.eclipse.jetty.server.Request
 import org.junit.runner.RunWith
 import org.scalatest._
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class CloudFeedPublisherTest extends FunSpec with BeforeAndAfterAllConfigMap with BeforeAndAfterEach with Matchers with JettyTestServer{
+class CloudFeedPublisherTest extends FunSpec with BeforeAndAfterAllConfigMap with BeforeAndAfterEach with Matchers with JettyTestServer {
   val feedsHandler = new FeedsHandler
   setHandler(feedsHandler)
   var publisher: CloudFeedPublisher = _
@@ -26,12 +26,18 @@ class CloudFeedPublisherTest extends FunSpec with BeforeAndAfterAllConfigMap wit
   }
 
   describe("publish") {
-    it("should post to endpoint and do nothing on success") {
-      publisher.publish("foo", "bar")
+    val goodStatusCodes = List(HttpStatus.SC_OK, HttpStatus.SC_CREATED, HttpStatus.SC_ACCEPTED,
+      HttpStatus.SC_NON_AUTHORITATIVE_INFORMATION, HttpStatus.SC_NO_CONTENT, HttpStatus.SC_RESET_CONTENT,
+      HttpStatus.SC_PARTIAL_CONTENT, HttpStatus.SC_MULTI_STATUS)
+    goodStatusCodes.foreach { statusCode =>
+      it(s"should post to endpoint and do nothing on success with status $statusCode") {
+        feedsHandler.returnStatus = statusCode
+        publisher.publish("foo", "bar")
 
-      feedsHandler.interaction.method should equal("POST")
-      feedsHandler.interaction.tokenHeader should equal("bar")
-      feedsHandler.interaction.body should equal("foo")
+        feedsHandler.interaction.method should equal("POST")
+        feedsHandler.interaction.tokenHeader should equal("bar")
+        feedsHandler.interaction.body should equal("foo")
+      }
     }
 
     it("should post to endpoint and throw an exception when unauthorized") {
@@ -41,8 +47,9 @@ class CloudFeedPublisherTest extends FunSpec with BeforeAndAfterAllConfigMap wit
       }
     }
 
-    val statusCodes = List(HttpStatus.SC_BAD_GATEWAY, HttpStatus.SC_BAD_REQUEST, HttpStatus.SC_FORBIDDEN, HttpStatus.SC_NOT_FOUND, HttpStatus.SC_REQUEST_TOO_LONG)
-    statusCodes.foreach { statusCode =>
+    val badStatusCodes = List(HttpStatus.SC_BAD_GATEWAY, HttpStatus.SC_BAD_REQUEST, HttpStatus.SC_FORBIDDEN,
+      HttpStatus.SC_NOT_FOUND, HttpStatus.SC_REQUEST_TOO_LONG)
+    badStatusCodes.foreach { statusCode =>
       it(s"should post to endpoint and throw an exception for status $statusCode") {
         feedsHandler.returnStatus = statusCode
         intercept[Exception] {
@@ -62,10 +69,10 @@ class CloudFeedPublisherTest extends FunSpec with BeforeAndAfterAllConfigMap wit
 
   class FeedsHandler extends AbstractHandler {
     var interaction: RequestInteraction = _
-    var returnStatus = HttpStatus.SC_OK
+    var returnStatus = HttpStatus.SC_CREATED
 
     def resetInteractions() = {
-      returnStatus =HttpStatus.SC_OK
+      returnStatus = HttpStatus.SC_CREATED
       interaction = null
     }
 
