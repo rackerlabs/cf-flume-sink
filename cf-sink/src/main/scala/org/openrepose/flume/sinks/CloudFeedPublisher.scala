@@ -30,7 +30,7 @@ class CloudFeedPublisher(feedsEndpoint: String, httpProperties: Map[String, Stri
       statusCode match {
         case HttpStatus.SC_UNAUTHORIZED =>
           throw new UnauthorizedException("Feeds rejected the post as unauthorized")
-        case _ if statusCode >= 200 && statucCode < 300 =>
+        case _ if statusCode >= 200 && statusCode < 300 =>
           logger.debug("Successfully published to cloud feeds")
         case _ =>
           val responseBody = Source.fromInputStream(httpResponse.getEntity.getContent)(Codec.UTF8).mkString
