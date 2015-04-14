@@ -62,6 +62,7 @@ task unpackFlume(dependsOn: downloadFlume, type: Copy) {
 ospackage {
     packageName 'flume-repose'
     version flumeVersion
+    release '1'
     packageDescription 'Installs Flume with Repose recommended settings.'
 
     preInstall file("$parent.projectDir/preInstall.sh")
