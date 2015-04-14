@@ -24,6 +24,4 @@ project/plugins/project/
 
 # Gradle bits from: https://github.com/github/gitignore/blob/master/Gradle.gitignore
 .gradle
-gradlew*
-gradle/
 build/
