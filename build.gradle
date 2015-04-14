@@ -1,1 +1,4 @@
-//Nothing in here
+// The gradle wrapper lives here to make Gradle more portable
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.3'
+}
