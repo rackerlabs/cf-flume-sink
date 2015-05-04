@@ -4,6 +4,7 @@ import java.util.{Date, UUID}
 
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.abdera.Abdera
+import org.apache.abdera.model.Content
 
 object AtomFormatter extends LazyLogging {
 
@@ -20,7 +21,7 @@ object AtomFormatter extends LazyLogging {
     entry.setTitle("User Access Event")
     entry.addAuthor("Repose")
     entry.setUpdated(now)
-    entry.setContent(content)
+    entry.setContent(content, Content.Type.XML)
 
     entry.toString
   }

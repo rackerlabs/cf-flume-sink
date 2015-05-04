@@ -5,7 +5,7 @@ import java.nio.charset.StandardCharsets
 import org.apache.flume.Sink.Status
 import org.apache.flume.{Channel, Event, Transaction}
 import org.junit.runner.RunWith
-import org.mockito.Matchers.{anyString, eq => mockitoEq}
+import org.mockito.Matchers.{anyString, eq => mockitoEq, matches}
 import org.mockito.Mockito._
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.mock.MockitoSugar
@@ -79,6 +79,27 @@ class AtomPublishingSinkTest extends FunSpec with Matchers with MockitoSugar {
       verify(mockTransaction, times(1)).begin()
       verify(mockTransaction, times(1)).rollback()
       verify(mockTransaction, times(1)).close()
+    }
+    it("should not modify or escape XML content pulled off the channel") {
+      val mockChannel = mock[Channel]
+      val mockTransaction = mock[Transaction]
+      val mockEvent = mock[Event]
+      val mockKeystoneConnector = mock[KeystoneV2Connector]
+      val mockFeedPublisher = mock[CloudFeedPublisher]
+      when(mockKeystoneConnector.getToken).thenReturn("tkn")
+      when(mockChannel.getTransaction).thenReturn(mockTransaction)
+      when(mockChannel.take).thenReturn(mockEvent)
+      when(mockEvent.getBody).thenReturn("<event xmlns=\"test\">test</event>".getBytes(StandardCharsets.UTF_8))
+
+      val sink = new AtomPublishingSink()
+      sink.setChannel(mockChannel)
+      sink.keystoneV2Connector = mockKeystoneConnector
+      sink.feedPublisher = mockFeedPublisher
+
+      val status = sink.process()
+
+      status should be theSameInstanceAs Status.READY
+      verify(mockFeedPublisher, times(1)).publish(matches(".+<content.*><event xmlns=\"test\">test</event></content>.+"), mockitoEq("tkn"))
     }
   }
 }
