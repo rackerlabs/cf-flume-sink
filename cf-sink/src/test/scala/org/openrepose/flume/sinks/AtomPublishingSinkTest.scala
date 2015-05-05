@@ -99,7 +99,7 @@ class AtomPublishingSinkTest extends FunSpec with Matchers with MockitoSugar {
       val status = sink.process()
 
       status should be theSameInstanceAs Status.READY
-      verify(mockFeedPublisher, times(1)).publish(matches(".+<content.*><event xmlns=\"test\">test</event></content>.+"), mockitoEq("tkn"))
+      verify(mockFeedPublisher, times(1)).publish(matches(".+<content\\s.*type=\"application/xml\".*><event xmlns=\"test\">test</event></content>.+"), mockitoEq("tkn"))
     }
   }
 }
