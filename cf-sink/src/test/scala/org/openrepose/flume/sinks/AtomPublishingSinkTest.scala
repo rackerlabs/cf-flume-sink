@@ -5,11 +5,14 @@ import java.nio.charset.StandardCharsets
 import org.apache.flume.Sink.Status
 import org.apache.flume.{Channel, Event, Transaction}
 import org.junit.runner.RunWith
-import org.mockito.Matchers.{anyString, eq => mockitoEq, matches}
+import org.mockito.ArgumentCaptor
+import org.mockito.Matchers.{anyString, eq => mockitoEq}
 import org.mockito.Mockito._
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{FunSpec, Matchers}
+
+import scala.xml.XML
 
 @RunWith(classOf[JUnitRunner])
 class AtomPublishingSinkTest extends FunSpec with Matchers with MockitoSugar {
@@ -86,6 +89,7 @@ class AtomPublishingSinkTest extends FunSpec with Matchers with MockitoSugar {
       val mockEvent = mock[Event]
       val mockKeystoneConnector = mock[KeystoneV2Connector]
       val mockFeedPublisher = mock[CloudFeedPublisher]
+      val postBodyCaptor = ArgumentCaptor.forClass(classOf[String])
       when(mockKeystoneConnector.getToken).thenReturn("tkn")
       when(mockChannel.getTransaction).thenReturn(mockTransaction)
       when(mockChannel.take).thenReturn(mockEvent)
@@ -99,7 +103,8 @@ class AtomPublishingSinkTest extends FunSpec with Matchers with MockitoSugar {
       val status = sink.process()
 
       status should be theSameInstanceAs Status.READY
-      verify(mockFeedPublisher, times(1)).publish(matches(".+<content.*><event xmlns=\"test\">test</event></content>.+"), mockitoEq("tkn"))
+      verify(mockFeedPublisher, times(1)).publish(postBodyCaptor.capture(), mockitoEq("tkn"))
+      (XML.loadString(postBodyCaptor.getValue) \ "content" \ "event").text shouldBe "test"
     }
   }
 }
