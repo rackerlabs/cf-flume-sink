@@ -27,7 +27,7 @@ apply plugin: 'org.hidetake.ssh'
 apply plugin: 'com.github.johnrengelman.shadow'
 
 group = 'org.openrepose'
-version = '1.0.7'
+version = '1.0.8'
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
 
