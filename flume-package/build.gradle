@@ -73,6 +73,30 @@ def app_user = 'flume'
 def app_group = 'flume'
 def log_path = '/var/log/flume'
 
+if (project.hasProperty('gpgPassphrase')) {
+    allprojects { ext.'signing.keyId' = 'E7C89BBB' }
+    allprojects { ext.'signing.password' = "$gpgPassphrase" }
+    allprojects {
+        ext.'signing.secretKeyRingFile' = project.hasProperty('secretKeyRingFile') ?
+                "$secretKeyRingFile" :
+                "${System.properties['user.home']}/.gnupg/secring.gpg"
+    }
+
+    signing {
+        sign buildRpm
+        sign buildDeb
+    }
+
+    task('deployFlume', dependsOn: ['buildRpm', 'buildDeb', 'signBuildRpm', 'signBuildDeb']) << {
+        ssh.run {
+            session(remotes.packageRepo) {
+                put from: buildRpm.outputs.files, into: '/home/repose-dev/RELEASES'
+                put from: buildDeb.outputs.files, into: '/home/repose-dev/RELEASES'
+            }
+        }
+    }
+}
+
 ospackage {
     packageName 'flume-repose'
     version flumeVersion
@@ -116,14 +140,5 @@ buildRpm.dependsOn filterLog4j
 buildDeb.dependsOn unpackFlume
 
 apply from: '../remotesConfig.gradle'
-
-task('deployFlume', dependsOn: ['buildRpm', 'buildDeb']) << {
-    ssh.run {
-        session(remotes.packageRepo) {
-            put from: buildRpm.outputs.files, into: '/home/repose-dev/RELEASES'
-            put from: buildDeb.outputs.files, into: '/home/repose-dev/RELEASES'
-        }
-    }
-}
 
 task('build', dependsOn: ['buildRpm', 'buildDeb'])
