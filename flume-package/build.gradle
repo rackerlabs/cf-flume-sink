@@ -1,3 +1,5 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
 buildscript {
     repositories {
         mavenLocal()
@@ -21,6 +23,7 @@ apply plugin: 'org.hidetake.ssh'
 apply plugin: 'de.undercouch.download'
 
 group = 'org.openrepose'
+
 
 publishing {
     publications {
@@ -57,7 +60,21 @@ task downloadFlume(type: Download) {
 task unpackFlume(dependsOn: downloadFlume, type: Copy) {
     from tarTree(resources.gzip(flumeArchive))
     into buildDir
+    exclude '**/log4j.properties'
 }
+
+task filterLog4j( dependsOn: unpackFlume, type: Copy ) {
+    from tarTree(resources.gzip(flumeArchive))
+    into buildDir
+    include '**/log4j.properties'
+
+    // to support running flume as a service, write logs to absolute path, standard location
+    filter { line -> line.contains( 'flume.log.dir=./logs' ) ? 'flume.log.dir=/var/log/flume' : line }
+}
+
+def app_user = 'flume'
+def app_group = 'flume'
+def log_path = '/var/log/flume'
 
 ospackage {
     packageName 'flume-repose'
@@ -67,15 +84,38 @@ ospackage {
 
     preInstall file("$parent.projectDir/preInstall.sh")
 
-    user 'flume'
-    permissionGroup 'flume'
+    user app_user
+    permissionGroup app_group
     os 'LINUX'
 
     from flumeDir
     into '/opt/flume'
+
+    // looks like its not straightforward to create a directory with no files.  This works, though.
+    // https://github.com/nebula-plugins/gradle-ospackage-plugin/issues/14
+    postInstall 'mkdir -p ' + log_path + '; chown -R ' + app_user + ':' + app_group + ' ' + log_path
 }
 
-buildRpm.dependsOn unpackFlume
+buildRpm {
+
+    from( 'src/main/resources/sysconfig' ) {
+        into '/etc/sysconfig'
+        include 'flume-ng'
+        user 'root'
+        permissionGroup 'root'
+        fileMode 0744
+    }
+
+    from( 'src/main/resources/init.d/rpm' ) {
+        into '/etc/init.d'
+        include 'flume-ng'
+        user 'root'
+        permissionGroup 'root'
+        fileMode 0755
+    }
+}
+
+buildRpm.dependsOn filterLog4j
 buildDeb.dependsOn unpackFlume
 
 apply from: '../remotesConfig.gradle'
