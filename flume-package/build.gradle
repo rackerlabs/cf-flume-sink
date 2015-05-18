@@ -22,7 +22,6 @@ apply plugin: 'de.undercouch.download'
 
 group = 'org.openrepose'
 
-
 publishing {
     publications {
         mavenRpm(MavenPublication) {
@@ -101,7 +100,7 @@ buildRpm {
         include 'flume-ng'
         user 'root'
         permissionGroup 'root'
-        fileMode 0744
+        fileMode 0644
     }
 
     from( 'src/main/resources/init.d/rpm' ) {
