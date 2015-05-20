@@ -16,7 +16,6 @@ buildscript {
 }
 
 apply plugin: 'scala'
-apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'propdeps'
 apply plugin: 'propdeps-maven'
@@ -25,6 +24,7 @@ apply plugin: 'maven-publish-auth'
 apply plugin: 'os-package'
 apply plugin: 'org.hidetake.ssh'
 apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'signing'
 
 group = 'org.openrepose'
 version = '1.0.8'
@@ -52,32 +52,64 @@ tasks.withType(ScalaCompile) {
     scalaCompileOptions.useAnt = false
 }
 
+if (project.hasProperty('gpgPassphrase')) {
+    allprojects { ext.'signing.keyId' = 'E7C89BBB' }
+    allprojects { ext.'signing.password' = "$gpgPassphrase" }
+    allprojects {
+        ext.'signing.secretKeyRingFile' = project.hasProperty('secretKeyRingFile') ?
+                "$secretKeyRingFile" :
+                "${System.properties['user.home']}/.gnupg/secring.gpg"
+    }
+
+    signing {
+        sign shadowJar
+        sign buildRpm
+        sign buildDeb
+    }
+
+    publishing {
+        publications {
+            mavenJar(MavenPublication) {
+                artifactId "cf-flume-sink-jar"
+                artifact source: shadowJar, extension: 'jar'
+                artifact source: signShadowJar.outputs.files.singleFile, extension: 'jar.asc'
+            }
+            mavenRpm(MavenPublication) {
+                artifactId "cf-flume-sink-rpm"
+                artifact source: buildRpm, extension: 'rpm'
+                artifact source: signBuildRpm.outputs.files.singleFile, extension: 'rpm.asc'
+            }
+            mavenDeb(MavenPublication) {
+                artifactId "cf-flume-sink-deb"
+                artifact source: buildDeb, extension: 'deb'
+                artifact source: signBuildDeb.outputs.files.singleFile, extension: 'deb.asc'
+            }
+        }
+        repositories {
+            maven {
+                name 'releases.maven.research.rackspace.com'
+                url 'https://maven.research.rackspacecloud.com/content/repositories/releases'
+            }
+        }
+    }
+
+    task('deploy', dependsOn: ['buildRpm', 'buildDeb', 'signBuildRpm', 'signBuildDeb']) << {
+        ssh.run {
+            session(remotes.packageRepo) {
+                put from: buildRpm.outputs.files, into: '/home/repose-dev/RELEASES'
+                put from: signBuildRpm.outputs.files, into: '/home/repose-dev/RELEASES'
+                put from: buildDeb.outputs.files, into: '/home/repose-dev/RELEASES'
+                put from: signBuildDeb.outputs.files, into: '/home/repose-dev/RELEASES'
+            }
+        }
+    }
+
+    tasks.publish.dependsOn 'signShadowJar', 'signBuildRpm', 'signBuildDeb'
+}
+
 shadowJar {
     relocate 'org.apache.commons.httpclient', 'org.openrepose.org.apache.commons.httpclient'
     relocate 'org.apache.http', 'org.openrepose.org.apache.http'
-}
-
-publishing {
-    publications {
-        mavenJar(MavenPublication) {
-            artifactId "cf-flume-sink-jar"
-            artifact shadowJar
-        }
-        mavenRpm(MavenPublication) {
-            artifactId "cf-flume-sink-rpm"
-            artifact source: buildRpm, extension: 'rpm'
-        }
-        mavenDeb(MavenPublication) {
-            artifactId "cf-flume-sink-deb"
-            artifact source: buildDeb, extension: 'deb'
-        }
-    }
-    repositories {
-        maven {
-            name 'releases.maven.research.rackspace.com'
-            url 'https://maven.research.rackspacecloud.com/content/repositories/releases'
-        }
-    }
 }
 
 ospackage {
@@ -113,15 +145,6 @@ ospackage {
 }
 
 apply from: '../remotesConfig.gradle'
-
-task('deploy', dependsOn: ['buildRpm', 'buildDeb']) << {
-    ssh.run {
-        session(remotes.packageRepo) {
-            put from: buildRpm.outputs.files, into: '/home/repose-dev/RELEASES'
-            put from: buildDeb.outputs.files, into: '/home/repose-dev/RELEASES'
-        }
-    }
-}
 
 //The build task needs to also build the build rpm and deb
 tasks.build.dependsOn 'buildRpm', 'buildDeb'
