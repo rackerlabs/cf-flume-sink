@@ -2,6 +2,9 @@
 #
 # Startup script for Flume-Repose
 #
+# chkconfig: 345 85 15     - start or stop process definition within the boot process
+# description: Script for starting Flume as a daemon on system startup
+# processname: flume-ng
 
 # Source function library.
 . /etc/rc.d/init.d/functions
