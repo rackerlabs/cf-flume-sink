@@ -119,7 +119,7 @@ ospackage {
         fileMode 0644
     }
 
-    from('src/main/resources/init.d/rpm') {
+    from('src/main/resources/init.d') {
         into '/etc/init.d'
         include 'flume-ng'
         user 'root'
