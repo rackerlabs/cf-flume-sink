@@ -44,7 +44,7 @@ if [ ! -d $LOG_PATH ]; then
 fi
 
 if [ ! -d $JAVA_HOME ]; then
-    echo "Could not find JAVA_HOME. Please set JAVA_HOME in /etc/default/flume-ng or your shell environment."
+    echo "Could not find JAVA_HOME. Please set JAVA_HOME in /etc/default/flume-ng."
     exit 1
 fi
 
