@@ -1,0 +1,3 @@
+# Default settings for flume-ng.
+
+JAVA_HOME=''
