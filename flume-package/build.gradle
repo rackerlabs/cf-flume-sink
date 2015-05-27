@@ -99,7 +99,7 @@ if (project.hasProperty('gpgPassphrase')) {
 ospackage {
     packageName 'flume-repose'
     version flumeVersion
-    release '1'
+    release '2'
     packageDescription 'Installs Flume with Repose recommended settings.'
 
     preInstall file("$parent.projectDir/preInstall.sh")
