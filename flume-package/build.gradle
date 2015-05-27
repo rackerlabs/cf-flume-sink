@@ -68,13 +68,13 @@ if (project.hasProperty('gpgPassphrase')) {
                 artifactId 'flume-repose-rpm'
                 version "$flumeVersion"
                 artifact source: buildRpm, extension: 'rpm'
-                artifact source: signBuildRpm.outputs.files.singleFile, extension: 'rpm.asc'
+                artifact source: signBuildRpm.outputs.files.singleFile, extension: 'rpm.asc', classifier: 'sig'
             }
             mavenDeb(MavenPublication) {
                 artifactId 'flume-repose-deb'
                 version "$flumeVersion"
                 artifact source: buildDeb, extension: 'deb'
-                artifact source: signBuildDeb.outputs.files.singleFile, extension: 'deb.asc'
+                artifact source: signBuildDeb.outputs.files.singleFile, extension: 'deb.asc', classifier: 'sig'
             }
         }
         repositories {

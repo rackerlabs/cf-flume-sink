@@ -72,17 +72,17 @@ if (project.hasProperty('gpgPassphrase')) {
             mavenJar(MavenPublication) {
                 artifactId "cf-flume-sink-jar"
                 artifact source: shadowJar, extension: 'jar'
-                artifact source: signShadowJar.outputs.files.singleFile, extension: 'jar.asc'
+                artifact source: signShadowJar.outputs.files.singleFile, extension: 'jar.asc', classifier: 'sig'
             }
             mavenRpm(MavenPublication) {
                 artifactId "cf-flume-sink-rpm"
                 artifact source: buildRpm, extension: 'rpm'
-                artifact source: signBuildRpm.outputs.files.singleFile, extension: 'rpm.asc'
+                artifact source: signBuildRpm.outputs.files.singleFile, extension: 'rpm.asc', classifier: 'sig'
             }
             mavenDeb(MavenPublication) {
                 artifactId "cf-flume-sink-deb"
                 artifact source: buildDeb, extension: 'deb'
-                artifact source: signBuildDeb.outputs.files.singleFile, extension: 'deb.asc'
+                artifact source: signBuildDeb.outputs.files.singleFile, extension: 'deb.asc', classifier: 'sig'
             }
         }
         repositories {
