@@ -9,11 +9,11 @@
 # Source function library.
 . /etc/rc.d/init.d/functions
 
+# Source default
+. /etc/default/flume-ng
+
 # Set sensible defaults
 LOG_PATH=/var/log/flume
-# NOTE:  flume references java from JAVA_HOME, so this is configured differently than the repose
-# init script.
-export JAVA_HOME=/usr/lib/jvm/jre-1.7.0-openjdk.x86_64
 CONFIG_DIRECTORY=/opt/flume/conf
 COMMAND=/opt/flume/bin/flume-ng
 USER=flume
@@ -22,7 +22,7 @@ DAEMON_HOME=/opt/flume
 PID_FILE=/var/run/${NAME}.pid
 START_ARGS="-c $DAEMON_HOME -p $PID_FILE -u $USER -o $LOG_PATH/stdout.log -e $LOG_PATH/stderr.log -l /var/lock/subsys/$NAME"
 RUN_ARGS="agent -n repose-agent -c $CONFIG_DIRECTORY -f $CONFIG_DIRECTORY/cf-flume-conf.properties"
-# NOTE:  flume declares its JVM arguments in /opt/flume/conf/flume-env.sh, not here
+# NOTE: flume declares its JVM arguments in /opt/flume/conf/flume-env.sh, not here
 daemonize=/usr/sbin/daemonize
 
 # Can override the defaults in /etc/sysconfig
@@ -41,6 +41,11 @@ fi
 if [ ! -d $LOG_PATH ]; then
   echo "Unable to log to $LOG_PATH."
   exit 1
+fi
+
+if [ ! -d $JAVA_HOME ]; then
+    echo "Could not find JAVA_HOME. Please set JAVA_HOME in /etc/default/flume-ng."
+    exit 1
 fi
 
 start()

@@ -119,17 +119,37 @@ ospackage {
         fileMode 0644
     }
 
-    from('src/main/resources/init.d') {
+    from('src/main/resources/default/flume-ng') {
+        into '/etc/default'
+        include 'flume-ng'
+        user 'root'
+        permissionGroup 'root'
+        fileMode 0644
+    }
+
+    // looks like its not straightforward to create a directory with no files.  This works, though.
+    // https://github.com/nebula-plugins/gradle-ospackage-plugin/issues/14
+    postInstall "mkdir -p $log_path && chown -R $app_user:$app_group $log_path"
+}
+
+buildRpm {
+    from('src/main/resources/init.d/rpm') {
         into '/etc/init.d'
         include 'flume-ng'
         user 'root'
         permissionGroup 'root'
         fileMode 0755
     }
+}
 
-    // looks like its not straightforward to create a directory with no files.  This works, though.
-    // https://github.com/nebula-plugins/gradle-ospackage-plugin/issues/14
-    postInstall "mkdir -p $log_path && chown -R $app_user:$app_group $log_path"
+buildDeb {
+    from('src/main/resources/init.d/deb') {
+        into '/etc/init.d'
+        include 'flume-ng'
+        user 'root'
+        permissionGroup 'root'
+        fileMode 0755
+    }
 }
 
 buildRpm.dependsOn unpackFlume
