@@ -19,6 +19,7 @@ apply plugin: 'maven-publish-auth'
 apply plugin: 'os-package'
 apply plugin: 'org.hidetake.ssh'
 apply plugin: 'de.undercouch.download'
+apply plugin: 'signing'
 
 group = 'org.openrepose'
 
