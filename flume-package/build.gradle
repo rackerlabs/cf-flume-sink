@@ -22,6 +22,7 @@ apply plugin: 'de.undercouch.download'
 apply plugin: 'signing'
 
 group = 'org.openrepose'
+def releaseNum = '4'
 
 import de.undercouch.gradle.tasks.download.Download
 
@@ -66,13 +67,13 @@ if (project.hasProperty('gpgPassphrase')) {
         publications {
             mavenRpm(MavenPublication) {
                 artifactId 'flume-repose-rpm'
-                version "$flumeVersion"
+                version "$flumeVersion-$releaseNum"
                 artifact source: buildRpm, extension: 'rpm'
                 artifact source: signBuildRpm.singleSignature, extension: 'rpm.asc', classifier: 'sig'
             }
             mavenDeb(MavenPublication) {
                 artifactId 'flume-repose-deb'
-                version "$flumeVersion"
+                version "$flumeVersion-$releaseNum"
                 artifact source: buildDeb, extension: 'deb'
                 artifact source: signBuildDeb.singleSignature, extension: 'deb.asc', classifier: 'sig'
             }
@@ -98,7 +99,7 @@ if (project.hasProperty('gpgPassphrase')) {
 ospackage {
     packageName 'flume-repose'
     version flumeVersion
-    release '4'
+    release releaseNum
     packageDescription 'Installs Flume with Repose recommended settings.'
 
     preInstall file("$parent.projectDir/preInstall.sh")
