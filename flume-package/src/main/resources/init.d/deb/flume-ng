@@ -55,6 +55,8 @@ if [ ! -d $JAVA_HOME ]; then
     exit 1
 fi
 
+export JAVA_HOME
+
 start()
 {
   start-stop-daemon $START_ARGS --chuid $USER:$USER --exec $COMMAND -- $RUN_ARGS
