@@ -22,7 +22,7 @@ apply plugin: 'de.undercouch.download'
 apply plugin: 'signing'
 
 group = 'org.openrepose'
-def releaseNum = '4'
+def releaseNum = '5'
 
 import de.undercouch.gradle.tasks.download.Download
 
