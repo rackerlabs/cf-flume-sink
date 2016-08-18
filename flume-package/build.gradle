@@ -8,21 +8,21 @@ buildscript {
     }
     dependencies {
         classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.1'
-        classpath 'com.netflix.nebula:gradle-ospackage-plugin:2.2.0'
+        classpath 'com.netflix.nebula:gradle-ospackage-plugin:3.4.0'
         classpath 'org.hidetake:gradle-ssh-plugin:1.0.5'
-        classpath 'de.undercouch:gradle-download-task:1.2'
+        classpath 'de.undercouch:gradle-download-task:3.1.1'
     }
 }
 
 apply plugin: 'maven-publish'
 apply plugin: 'maven-publish-auth'
-apply plugin: 'os-package'
+apply plugin: 'nebula.ospackage'
 apply plugin: 'org.hidetake.ssh'
 apply plugin: 'de.undercouch.download'
 apply plugin: 'signing'
 
 group = 'org.openrepose'
-def releaseNum = '5'
+def releaseNum = '6'
 
 import de.undercouch.gradle.tasks.download.Download
 
@@ -50,18 +50,6 @@ def app_group = 'flume'
 def log_path = '/var/log/flume'
 
 if (project.hasProperty('gpgPassphrase')) {
-    allprojects { ext.'signing.keyId' = 'E7C89BBB' }
-    allprojects { ext.'signing.password' = "$gpgPassphrase" }
-    allprojects {
-        ext.'signing.secretKeyRingFile' = project.hasProperty('secretKeyRingFile') ?
-                "$secretKeyRingFile" :
-                "${System.properties['user.home']}/.gnupg/secring.gpg"
-    }
-
-    signing {
-        sign buildRpm
-        sign buildDeb
-    }
 
     publishing {
         publications {
@@ -97,16 +85,26 @@ if (project.hasProperty('gpgPassphrase')) {
 }
 
 ospackage {
-    packageName 'flume-repose'
-    version flumeVersion
-    release releaseNum
-    packageDescription 'Installs Flume with Repose recommended settings.'
+    packageName = 'flume-repose'
+    packageDescription = 'Installs Flume with Repose recommended settings.'
+    version = flumeVersion
+    os = LINUX
 
-    preInstall file("$parent.projectDir/preInstall.sh")
+    priority = 'optional'
+    packageGroup = 'Applications/Internet'
+    maintainer = 'Repose Development <repose-development@lists.openrepose.org>'
+    url = 'http://openrepose.org'
 
-    user app_user
-    permissionGroup app_group
-    os 'LINUX'
+    if(project.hasProperty('signing.keyId') && project.hasProperty('signing.password') && project.hasProperty('signing.secretKeyRingFile')) {
+        signingKeyId project.getProperty('signing.keyId')
+        signingKeyPassphrase project.getProperty('signing.password')
+        signingKeyRingFile file(project.getProperty('signing.secretKeyRingFile'))
+    }
+
+    preInstall = file("$parent.projectDir/preInstall.sh")
+
+    user = app_user
+    permissionGroup = app_group
 
     from flumeDir
     into '/opt/flume'
@@ -133,6 +131,9 @@ ospackage {
 }
 
 buildRpm {
+    release = releaseNum
+
+    addParentDirs false
     from('src/main/resources/init.d/rpm') {
         into '/etc/init.d'
         include 'flume-ng'
@@ -157,4 +158,4 @@ buildDeb.dependsOn unpackFlume
 
 apply from: '../remotesConfig.gradle'
 
-task('build', dependsOn: ['buildRpm', 'buildDeb'])
+tasks.build.dependsOn 'buildRpm', 'buildDeb'

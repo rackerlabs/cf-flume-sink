@@ -9,8 +9,8 @@ buildscript {
     dependencies {
         classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.1'
         classpath 'org.springframework.build.gradle:propdeps-plugin:0.0.7'
-        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.0' // todo: get rid of this when Flume supports libext
-        classpath 'com.netflix.nebula:gradle-ospackage-plugin:2.2.0'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.3' // todo: get rid of this when Flume supports libext
+        classpath 'com.netflix.nebula:gradle-ospackage-plugin:3.4.0'
         classpath 'org.hidetake:gradle-ssh-plugin:1.0.5'
     }
 }
@@ -21,13 +21,14 @@ apply plugin: 'propdeps'
 apply plugin: 'propdeps-maven'
 apply plugin: 'maven-publish'
 apply plugin: 'maven-publish-auth'
-apply plugin: 'os-package'
+apply plugin: 'nebula.ospackage'
 apply plugin: 'org.hidetake.ssh'
 apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'signing'
 
 group = 'org.openrepose'
-version = '1.0.14'
+version = '1.0.15'
+def releaseNum = '0'
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
 
@@ -53,20 +54,6 @@ tasks.withType(ScalaCompile) {
 }
 
 if (project.hasProperty('gpgPassphrase')) {
-    allprojects { ext.'signing.keyId' = 'E7C89BBB' }
-    allprojects { ext.'signing.password' = "$gpgPassphrase" }
-    allprojects {
-        ext.'signing.secretKeyRingFile' = project.hasProperty('secretKeyRingFile') ?
-                "$secretKeyRingFile" :
-                "${System.properties['user.home']}/.gnupg/secring.gpg"
-    }
-
-    signing {
-        sign shadowJar
-        sign buildRpm
-        sign buildDeb
-    }
-
     publishing {
         publications {
             mavenJar(MavenPublication) {
@@ -111,28 +98,37 @@ shadowJar {
 }
 
 ospackage {
-    packageName 'cf-flume-sink'
-    packageDescription 'Installs a custom Flume sink which sends events over HTTP to a Cloud Feeds endpoint using ' +
-                       'the AtomPub protocol.'
-    release '1'
-    url 'https://github.com/rackerlabs/cf-flume-sink'
-    license 'Apache License, Version 2.0'
-    preInstall file("$parent.projectDir/preInstall.sh")
+    packageName = 'cf-flume-sink'
+    packageDescription = 'Installs a custom Flume sink which sends events over HTTP to a Cloud Feeds endpoint using ' +
+                         'the AtomPub protocol.'
+    os = LINUX
 
-    user 'flume'
-    permissionGroup 'flume'
-    os 'LINUX'
+    packageGroup = 'Applications/Internet'
+    url = 'https://github.com/rackerlabs/cf-flume-sink'
+    license = 'Apache License, Version 2.0'
+
+    if(project.hasProperty('signing.keyId') && project.hasProperty('signing.password') && project.hasProperty('signing.secretKeyRingFile')) {
+        signingKeyId project.getProperty('signing.keyId')
+        signingKeyPassphrase project.getProperty('signing.password')
+        signingKeyRingFile file(project.getProperty('signing.secretKeyRingFile'))
+    }
+
+    preInstall = file("$parent.projectDir/preInstall.sh")
+
+    user = 'flume'
+    permissionGroup = 'flume'
+
+    into '/opt/flume/plugins.d/cf-flume-sink'
 
     from('LICENSE.txt') {
         fileType LICENSE
         into '/usr/share/doc/cf-flume-sink'
     }
 
-    into '/opt/flume/plugins.d/cf-flume-sink'
-
     from(shadowJar.outputs.files) {
         into 'lib'
     }
+
     /* todo: replace fat jar with dependency jars here when Flume supports it without classpath issues
     from(configurations.runtime) {
         into 'libext'
@@ -140,6 +136,15 @@ ospackage {
     */
 
     requires('flume-repose')
+}
+
+buildRpm {
+    release = releaseNum
+    addParentDirs false
+}
+
+buildDeb {
+    // Nothing special for the .deb.
 }
 
 apply from: '../remotesConfig.gradle'
