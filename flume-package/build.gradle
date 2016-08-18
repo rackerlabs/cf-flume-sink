@@ -49,37 +49,32 @@ def app_user = 'flume'
 def app_group = 'flume'
 def log_path = '/var/log/flume'
 
-if (project.hasProperty('gpgPassphrase')) {
-
-    publishing {
-        publications {
-            mavenRpm(MavenPublication) {
-                artifactId 'flume-repose-rpm'
-                version "$flumeVersion-$releaseNum"
-                artifact source: buildRpm, extension: 'rpm'
-                artifact source: signBuildRpm.singleSignature, extension: 'rpm.asc', classifier: 'sig'
-            }
-            mavenDeb(MavenPublication) {
-                artifactId 'flume-repose-deb'
-                version "$flumeVersion-$releaseNum"
-                artifact source: buildDeb, extension: 'deb'
-                artifact source: signBuildDeb.singleSignature, extension: 'deb.asc', classifier: 'sig'
-            }
+publishing {
+    publications {
+        mavenRpm(MavenPublication) {
+            artifactId 'flume-repose-rpm'
+            version "$flumeVersion-$releaseNum"
+            artifact source: buildRpm, extension: 'rpm'
         }
-        repositories {
-            maven {
-                name 'releases.maven.research.rackspace.com'
-                url 'https://maven.research.rackspacecloud.com/content/repositories/releases'
-            }
+        mavenDeb(MavenPublication) {
+            artifactId 'flume-repose-deb'
+            version "$flumeVersion-$releaseNum"
+            artifact source: buildDeb, extension: 'deb'
         }
     }
+    repositories {
+        maven {
+            name 'releases.maven.research.rackspace.com'
+            url 'https://maven.research.rackspacecloud.com/content/repositories/releases'
+        }
+    }
+}
 
-    task('deployFlume', dependsOn: ['buildRpm', 'buildDeb', 'signBuildRpm', 'signBuildDeb']) << {
-        ssh.run {
-            session(remotes.packageRepo) {
-                put from: buildRpm.outputs.files, into: '/home/repose-dev/RELEASES'
-                put from: buildDeb.outputs.files, into: '/home/repose-dev/RELEASES'
-            }
+task('deployFlume', dependsOn: ['buildRpm', 'buildDeb']) << {
+    ssh.run {
+        session(remotes.packageRepo) {
+            put from: buildRpm.outputs.files, into: '/home/repose-dev/RELEASES'
+            put from: buildDeb.outputs.files, into: '/home/repose-dev/RELEASES'
         }
     }
 }
