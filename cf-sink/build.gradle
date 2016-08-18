@@ -140,6 +140,7 @@ ospackage {
 
 buildRpm {
     release = releaseNum
+    addParentDirs false
 }
 
 buildDeb {
