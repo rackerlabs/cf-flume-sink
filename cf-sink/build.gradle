@@ -53,44 +53,44 @@ tasks.withType(ScalaCompile) {
     scalaCompileOptions.useAnt = false
 }
 
-if (project.hasProperty('gpgPassphrase')) {
-    publishing {
-        publications {
-            mavenJar(MavenPublication) {
-                artifactId "cf-flume-sink-jar"
-                artifact source: shadowJar, extension: 'jar'
-                artifact source: signShadowJar.singleSignature, extension: 'jar.asc', classifier: 'sig'
-            }
-            mavenRpm(MavenPublication) {
-                artifactId "cf-flume-sink-rpm"
-                artifact source: buildRpm, extension: 'rpm'
-                artifact source: signBuildRpm.singleSignature, extension: 'rpm.asc', classifier: 'sig'
-            }
-            mavenDeb(MavenPublication) {
-                artifactId "cf-flume-sink-deb"
-                artifact source: buildDeb, extension: 'deb'
-                artifact source: signBuildDeb.singleSignature, extension: 'deb.asc', classifier: 'sig'
-            }
-        }
-        repositories {
-            maven {
-                name 'releases.maven.research.rackspace.com'
-                url 'https://maven.research.rackspacecloud.com/content/repositories/releases'
-            }
-        }
-    }
-
-    task('deploy', dependsOn: ['buildRpm', 'buildDeb', 'signBuildRpm', 'signBuildDeb']) << {
-        ssh.run {
-            session(remotes.packageRepo) {
-                put from: buildRpm.outputs.files, into: '/home/repose-dev/RELEASES'
-                put from: buildDeb.outputs.files, into: '/home/repose-dev/RELEASES'
-            }
-        }
-    }
-
-    tasks.publish.dependsOn 'signShadowJar', 'signBuildRpm', 'signBuildDeb'
+signing {
+    sign shadowJar
 }
+
+publishing {
+    publications {
+        mavenJar(MavenPublication) {
+            artifactId "cf-flume-sink-jar"
+            artifact source: shadowJar, extension: 'jar'
+            artifact source: signShadowJar.singleSignature, extension: 'jar.asc', classifier: 'sig'
+        }
+        mavenRpm(MavenPublication) {
+            artifactId "cf-flume-sink-rpm"
+            artifact source: buildRpm, extension: 'rpm'
+        }
+        mavenDeb(MavenPublication) {
+            artifactId "cf-flume-sink-deb"
+            artifact source: buildDeb, extension: 'deb'
+        }
+    }
+    repositories {
+        maven {
+            name 'releases.maven.research.rackspace.com'
+            url 'https://maven.research.rackspacecloud.com/content/repositories/releases'
+        }
+    }
+}
+
+task('deploy', dependsOn: ['buildRpm', 'buildDeb']) << {
+    ssh.run {
+        session(remotes.packageRepo) {
+            put from: buildRpm.outputs.files, into: '/home/repose-dev/RELEASES'
+            put from: buildDeb.outputs.files, into: '/home/repose-dev/RELEASES'
+        }
+    }
+}
+
+tasks.publish.dependsOn 'signShadowJar', 'buildRpm', 'buildDeb'
 
 shadowJar {
     relocate 'org.apache.commons.httpclient', 'org.openrepose.org.apache.commons.httpclient'
